@@ -40,7 +40,7 @@ class VerdictResponse(BaseModel):
     evidence_scores: List[EvidenceScoreResponse]
     reasoning: List[str]
     similar_cases: List[str]
-    predicted_at: str = Field(default_factory=datetime.now().isoformat)
+    predicted_at: str = Field(default_factory=lambda: datetime.now().isoformat())
 
 
 class CasePrecedent(BaseModel):

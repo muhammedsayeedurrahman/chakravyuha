@@ -87,7 +87,7 @@ def _synthesize_sarvam(text: str, language: str = "hi-IN") -> bytes | None:
         logger.error("Sarvam API TypeError (check method call): %s", e)
         return None
     except Exception as e:
-        logger.error("Sarvam TTS failed: %s", type(e).__name__, str(e)[:100])
+        logger.error("Sarvam TTS failed: %s (%s)", type(e).__name__, str(e)[:100])
         return None
 
 

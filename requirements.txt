@@ -6,9 +6,13 @@ fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
 python-dotenv>=1.0.0
 pydantic>=2.0.0
+email-validator>=2.0.0
 
 # HTTP clients (LLM API calls)
 httpx>=0.25.0
+
+# Voice (Sarvam AI SDK — lightweight HTTP wrapper)
+sarvamai>=0.1.27
 
 # Keyword search (lightweight RAG fallback)
 rank-bm25>=0.2.2
