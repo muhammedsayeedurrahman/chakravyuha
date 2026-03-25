@@ -1,0 +1,10 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "Document templates for Chakravyuha legal drafting",
+    "supported_types": ["FIR", "LEGAL_NOTICE", "COMPLAINT", "RTI_APPLICATION"]
+  },
+  "FIR": "First Information Report template - handles criminal complaints",
+  "LEGAL_NOTICE": "Legal notice template - formal warning before escalation",
+  "COMPLAINT": "Complaint petition template - civil/consumer matters"
+}

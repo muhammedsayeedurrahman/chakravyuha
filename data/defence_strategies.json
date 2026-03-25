@@ -1,0 +1,193 @@
+{
+  "strategies": [
+    {
+      "section_id": "BNS-100",
+      "scenario": "Accused of murder",
+      "defences": [
+        {"name": "Self-defence (Private Defence)", "description": "Under BNS Section 37, the right of private defence of the body extends to causing death if there is reasonable apprehension of death or grievous hurt.", "applicability": "When the accused acted to protect themselves or others from imminent deadly harm."},
+        {"name": "Grave and sudden provocation", "description": "If the act was committed in the heat of passion caused by grave and sudden provocation, it may reduce the charge to culpable homicide (BNS-101).", "applicability": "When the victim provoked the accused severely and immediately before the act."},
+        {"name": "Accident/Misfortune", "description": "Under general exceptions, an act done by accident without criminal intention or knowledge is not an offence.", "applicability": "When death occurred accidentally during a lawful act done lawfully."},
+        {"name": "Alibi", "description": "Proving the accused was at a different location at the time of the offence.", "applicability": "When there is evidence placing the accused elsewhere."},
+        {"name": "Insanity (Unsoundness of mind)", "description": "Under BNS Section 22, nothing is an offence done by a person of unsound mind.", "applicability": "When the accused was incapable of understanding the nature of the act."}
+      ]
+    },
+    {
+      "section_id": "BNS-115",
+      "scenario": "Accused of voluntarily causing hurt (simple assault)",
+      "defences": [
+        {"name": "Self-defence", "description": "Right of private defence under BNS Section 37 permits use of reasonable force to protect oneself.", "applicability": "When the accused was protecting themselves from an attack."},
+        {"name": "Consent", "description": "If the hurt was caused with the victim's consent, it is not an offence (for persons above 18).", "applicability": "Sports injuries, consensual physical activities."},
+        {"name": "Grave and sudden provocation", "description": "The victim severely provoked the accused immediately before the incident.", "applicability": "When there was immediate provocation."},
+        {"name": "False accusation", "description": "Challenge the evidence and establish that the complaint is false or exaggerated.", "applicability": "When medical evidence does not support the claims."}
+      ]
+    },
+    {
+      "section_id": "BNS-117",
+      "scenario": "Accused of voluntarily causing grievous hurt",
+      "defences": [
+        {"name": "Self-defence", "description": "Right of private defence permits causing grievous hurt if there was reasonable apprehension of grievous hurt to oneself.", "applicability": "When the accused faced threat of serious injury."},
+        {"name": "Accident", "description": "The injury was caused accidentally without criminal intention.", "applicability": "When the harm was unintentional."},
+        {"name": "Disproportionate medical report", "description": "Challenge the medical evidence and classification of injuries as 'grievous'.", "applicability": "When injuries may not meet the legal definition of grievous hurt."}
+      ]
+    },
+    {
+      "section_id": "BNS-305",
+      "scenario": "Accused of theft",
+      "defences": [
+        {"name": "Right of private defence of property", "description": "The accused believed in good faith that they had a right to the property.", "applicability": "When there is a genuine dispute over ownership."},
+        {"name": "Claim of right", "description": "The accused took the property under a bona fide claim of right.", "applicability": "When the accused genuinely believed the property belonged to them."},
+        {"name": "Consent", "description": "The owner consented to the taking of property.", "applicability": "When there is evidence of permission."},
+        {"name": "No dishonest intention", "description": "The taking was without dishonest intention (e.g., borrowing with intent to return).", "applicability": "When the accused intended to return the property."}
+      ]
+    },
+    {
+      "section_id": "BNS-65",
+      "scenario": "Accused of robbery",
+      "defences": [
+        {"name": "No force or threat used", "description": "If no force or fear was used, the charge should be reduced to theft.", "applicability": "When the prosecution cannot prove use of force or threat."},
+        {"name": "Alibi", "description": "The accused was not present at the scene.", "applicability": "When there is evidence of being elsewhere."},
+        {"name": "Mistaken identity", "description": "The victim incorrectly identified the accused.", "applicability": "In cases of fleeting encounters or poor visibility."},
+        {"name": "Self-defence", "description": "The accused was protecting their own property.", "applicability": "When the accused had rightful claim to the property."}
+      ]
+    },
+    {
+      "section_id": "BNS-318",
+      "scenario": "Accused of cheating/fraud",
+      "defences": [
+        {"name": "No deception", "description": "The accused made honest representations and did not deceive anyone.", "applicability": "When representations were truthful or based on genuine belief."},
+        {"name": "No dishonest intention", "description": "The accused did not have fraudulent or dishonest intent at the time.", "applicability": "When the failure was due to genuine business failure, not fraud."},
+        {"name": "Civil dispute", "description": "The matter is essentially a civil dispute over a contract, not criminal cheating.", "applicability": "When the dispute arises from a genuine business relationship."},
+        {"name": "Consent / awareness", "description": "The complainant was fully aware of the risks involved.", "applicability": "When the complainant voluntarily entered into the arrangement."}
+      ]
+    },
+    {
+      "section_id": "BNS-316",
+      "scenario": "Accused of criminal breach of trust",
+      "defences": [
+        {"name": "No entrustment", "description": "The property was never entrusted to the accused.", "applicability": "When the prosecution cannot prove entrustment."},
+        {"name": "No dishonest misappropriation", "description": "The property was used for its intended purpose.", "applicability": "When funds were used for legitimate purposes."},
+        {"name": "Civil liability only", "description": "The breach is a civil matter, not criminal.", "applicability": "When there is no criminal intent, only a commercial dispute."}
+      ]
+    },
+    {
+      "section_id": "BNS-85",
+      "scenario": "Accused under domestic violence / cruelty by husband (498A equivalent)",
+      "defences": [
+        {"name": "No cruelty established", "description": "The acts alleged do not constitute 'cruelty' as defined in law.", "applicability": "When the allegations are about normal marital disagreements."},
+        {"name": "False complaint / misuse", "description": "The Supreme Court has noted misuse of 498A; establish that the complaint is filed with ulterior motive.", "applicability": "When there is evidence of false accusations."},
+        {"name": "Compromise / mediation", "description": "Seek resolution through mediation; Supreme Court has allowed quashing of 498A in cases of genuine compromise.", "applicability": "When both parties are willing to reconcile."},
+        {"name": "No dowry demand", "description": "Establish that no demand for dowry was ever made.", "applicability": "When dowry-related allegations are part of the complaint."}
+      ]
+    },
+    {
+      "section_id": "BNS-124",
+      "scenario": "Accused of causing death by negligence (road accident)",
+      "defences": [
+        {"name": "Contributory negligence", "description": "The victim also contributed to the accident through their own negligence.", "applicability": "When the victim was jaywalking, drunk, etc."},
+        {"name": "No rashness or negligence", "description": "The accused was driving within speed limits and following traffic rules.", "applicability": "When the accident was unavoidable."},
+        {"name": "Mechanical failure", "description": "The accident was caused by vehicle malfunction, not driver negligence.", "applicability": "When there is evidence of vehicle defect."},
+        {"name": "Sudden emergency", "description": "The accused faced a sudden emergency and acted reasonably.", "applicability": "When another vehicle or obstacle caused the situation."},
+        {"name": "Composite negligence", "description": "Multiple parties contributed to the accident.", "applicability": "When other drivers or road conditions contributed."}
+      ]
+    },
+    {
+      "section_id": "BNS-308",
+      "scenario": "Accused of criminal intimidation / extortion",
+      "defences": [
+        {"name": "No threat made", "description": "The accused did not make any threat.", "applicability": "When there is no evidence of threatening communication."},
+        {"name": "Exercise of legal right", "description": "The accused was merely asserting a legal right (e.g., demanding repayment of a loan).", "applicability": "When the demand was for something legally owed."},
+        {"name": "No intent to intimidate", "description": "The words used were not intended to cause alarm.", "applicability": "When the communication was misinterpreted."}
+      ]
+    },
+    {
+      "section_id": "BNS-329",
+      "scenario": "Accused of criminal trespass",
+      "defences": [
+        {"name": "Right of way / easement", "description": "The accused had a legal right of way or easement.", "applicability": "When there is a documented right of access."},
+        {"name": "No criminal intent", "description": "The entry was without intent to commit an offence or intimidate.", "applicability": "When the entry was accidental or innocent."},
+        {"name": "Ownership / right to possession", "description": "The accused has a legal right to the property.", "applicability": "When there is a property ownership dispute."}
+      ]
+    },
+    {
+      "section_id": "BNS-340",
+      "scenario": "Accused of forgery",
+      "defences": [
+        {"name": "Authorization", "description": "The accused had authority to sign or create the document.", "applicability": "When there is a power of attorney or authorization."},
+        {"name": "No intent to defraud", "description": "The document was not made with intent to cause damage or commit fraud.", "applicability": "When the document was made in good faith."},
+        {"name": "Genuine document", "description": "The document is genuine, not forged.", "applicability": "When expert analysis supports authenticity."}
+      ]
+    },
+    {
+      "section_id": "BNS-356",
+      "scenario": "Accused of defamation",
+      "defences": [
+        {"name": "Truth as defence", "description": "Under the First Exception, it is not defamation if the imputation is true and in the public interest.", "applicability": "When the statement is factually accurate."},
+        {"name": "Good faith opinion", "description": "Fair comment on a matter of public interest made in good faith.", "applicability": "When commenting on public figures or public matters."},
+        {"name": "Privileged communication", "description": "Communications in judicial proceedings, to public servants, or in other privileged contexts.", "applicability": "When the statement was made in a protected context."}
+      ]
+    },
+    {
+      "section_id": "BNS-74",
+      "scenario": "Accused of assault on woman with intent to outrage modesty",
+      "defences": [
+        {"name": "No intent to outrage modesty", "description": "The contact was accidental with no intention to outrage modesty.", "applicability": "Accidental contact in crowded places."},
+        {"name": "False complaint", "description": "The complaint is motivated by ulterior motive.", "applicability": "When there is evidence of false accusation."},
+        {"name": "Alibi", "description": "The accused was not present at the alleged time and place.", "applicability": "When there is evidence of being elsewhere."}
+      ]
+    },
+    {
+      "section_id": "BNS-78",
+      "scenario": "Accused of stalking",
+      "defences": [
+        {"name": "No repeated contact", "description": "There was no repeated following or contacting.", "applicability": "When the alleged incidents were isolated."},
+        {"name": "Legitimate purpose", "description": "The contact was for a legitimate purpose (e.g., professional, debt collection).", "applicability": "When there was a valid reason for contact."},
+        {"name": "No clear indication of disinterest", "description": "The complainant did not clearly communicate disinterest.", "applicability": "When the accused reasonably believed contact was welcome."}
+      ]
+    },
+    {
+      "section_id": "BNS-137",
+      "scenario": "Accused of kidnapping",
+      "defences": [
+        {"name": "Consent of the person", "description": "The person went willingly (applicable if above the age of consent).", "applicability": "When the person is an adult who consented."},
+        {"name": "Lawful guardianship", "description": "The accused is the lawful guardian of the person.", "applicability": "In custody disputes where accused is a parent."},
+        {"name": "No taking or enticement", "description": "The accused did not take or entice the person.", "applicability": "When the person came voluntarily."}
+      ]
+    },
+    {
+      "section_id": "BNS-109",
+      "scenario": "Accused of attempt to murder",
+      "defences": [
+        {"name": "No intention to kill", "description": "The accused did not have the intention to cause death.", "applicability": "When the injury was not aimed at vital body parts."},
+        {"name": "Self-defence", "description": "The accused acted in self-defence against a deadly attack.", "applicability": "When the accused faced a threat to their life."},
+        {"name": "Charge should be reduced", "description": "The facts support a lesser charge (e.g., voluntarily causing hurt, not attempt to murder).", "applicability": "When the nature of injuries suggests lower intent."}
+      ]
+    },
+    {
+      "section_id": "BNS-69",
+      "scenario": "Accused of mischief / property damage",
+      "defences": [
+        {"name": "No intent to cause damage", "description": "The damage was accidental, not intentional.", "applicability": "When the damage occurred unintentionally."},
+        {"name": "Right to property", "description": "The accused had a right to the property.", "applicability": "When the accused owns or co-owns the property."},
+        {"name": "Trivial damage", "description": "The damage was so trivial that no reasonable person would complain.", "applicability": "When the damage is negligible."}
+      ]
+    },
+    {
+      "section_id": "BNS-299",
+      "scenario": "Accused of criminal misappropriation",
+      "defences": [
+        {"name": "Claim of right", "description": "The accused took the property under a bona fide claim of right.", "applicability": "When the accused believed they had a right to the property."},
+        {"name": "No dishonest intention", "description": "The property was kept safely with intent to return.", "applicability": "When the property was found and the accused tried to locate the owner."}
+      ]
+    },
+    {
+      "section_id": "BNS-103",
+      "scenario": "Dowry death accusation",
+      "defences": [
+        {"name": "Death from natural causes", "description": "Establish that death occurred from natural causes or illness, not burns or injury.", "applicability": "When medical evidence supports natural death."},
+        {"name": "No cruelty or harassment", "description": "There was no cruelty or harassment before death.", "applicability": "When witnesses support a normal marital relationship."},
+        {"name": "No dowry demand", "description": "No dowry was demanded from the deceased or her family.", "applicability": "When there is no evidence of dowry demand."},
+        {"name": "Death after 7 years of marriage", "description": "The presumption under Section 103 only applies within 7 years of marriage.", "applicability": "When the death occurred more than 7 years after marriage."}
+      ]
+    }
+  ]
+}

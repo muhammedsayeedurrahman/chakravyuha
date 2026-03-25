@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: chakravyuha-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements-render.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: SARVAM_API_KEY
+        sync: false
+      - key: LLM_PRIORITY
+        value: "mistral,gemini,openrouter,sarvam"
+      - key: CORS_ORIGINS
+        value: "https://chakravyuha-ui.vercel.app,http://localhost:3000"

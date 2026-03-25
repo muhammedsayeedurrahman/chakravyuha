@@ -1,0 +1,159 @@
+{
+  "metadata": {
+    "ipc_effective_until": "2024-06-30",
+    "bns_effective_from": "2024-07-01",
+    "total_sections": 511,
+    "source": "indiacode.nic.in",
+    "last_updated": "2026-03-24",
+    "description": "Complete mapping of Indian Penal Code (1860) sections to Bharatiya Nyaya Sanhita (2023) equivalents"
+  },
+  "sections": {
+    "IPC-121": {
+      "bns_code": "BNS-152",
+      "title": "Waging, or attempting to wage war, or abetting waging of war, against the Government of India",
+      "punishment": "Death or life imprisonment + fine",
+      "type": "violent",
+      "cognizable": true,
+      "bailable": false
+    },
+    "IPC-122": {
+      "bns_code": "BNS-153",
+      "title": "Collecting arms, etc., with intention of waging war against Government of India",
+      "punishment": "Life imprisonment + fine",
+      "type": "violent",
+      "cognizable": true,
+      "bailable": false
+    },
+    "IPC-153": {
+      "bns_code": "BNS-191",
+      "title": "Promoting enmity between different groups on grounds of religion, race, place of birth, residence, language",
+      "punishment": "Imprisonment up to 3 years or fine up to Rs 5000 or both",
+      "type": "communal",
+      "cognizable": true,
+      "bailable": true
+    },
+    "IPC-153A": {
+      "bns_code": "BNS-192",
+      "title": "Deliberate and malicious acts intended to outrage religious feelings",
+      "punishment": "Imprisonment up to 3 years or fine up to Rs 5000 or both",
+      "type": "communal",
+      "cognizable": true,
+      "bailable": true
+    },
+    "IPC-295": {
+      "bns_code": "BNS-206",
+      "title": "Injuring or defiling place of worship with intent to insult any religion",
+      "punishment": "Imprisonment up to 2 years or fine up to Rs 1000 or both",
+      "type": "communal",
+      "cognizable": true,
+      "bailable": true
+    },
+    "IPC-302": {
+      "bns_code": "BNS-103",
+      "title": "Punishment for murder",
+      "punishment": "Death or life imprisonment + fine",
+      "type": "violent",
+      "cognizable": true,
+      "bailable": false,
+      "court": "Court of Session",
+      "note": "Most serious personal crime - victim death from criminal act"
+    },
+    "IPC-304": {
+      "bns_code": "BNS-106",
+      "title": "Causing death by act endangering life or personal safety",
+      "punishment": "Imprisonment up to 2 years or fine Rs 5000 or both",
+      "type": "violent",
+      "cognizable": true,
+      "bailable": true
+    },
+    "IPC-307": {
+      "bns_code": "BNS-109",
+      "title": "Attempt to murder",
+      "punishment": "Life imprisonment or imprisonment up to 10 years + fine",
+      "type": "violent",
+      "cognizable": true,
+      "bailable": false
+    },
+    "IPC-308": {
+      "bns_code": "BNS-110",
+      "title": "Attempt to cause hurt",
+      "punishment": "Imprisonment up to 6 months or fine Rs 250 or both",
+      "type": "violent",
+      "cognizable": false,
+      "bailable": true
+    },
+    "IPC-323": {
+      "bns_code": "BNS-115",
+      "title": "Punishment for voluntarily causing hurt",
+      "punishment": "Imprisonment up to 3 months or fine Rs 250 or both",
+      "type": "violent",
+      "cognizable": false,
+      "bailable": true,
+      "hindi": "स्वेच्छा से चोट पहुँचाना"
+    },
+    "IPC-324": {
+      "bns_code": "BNS-116",
+      "title": "Voluntarily causing hurt by means of weapon or anything used as weapon",
+      "punishment": "Imprisonment up to 6 months or fine Rs 500 or both",
+      "type": "violent",
+      "cognizable": false,
+      "bailable": true
+    },
+    "IPC-337": {
+      "bns_code": "BNS-121",
+      "title": "Causing hurt by act endangering life or personal safety",
+      "punishment": "Imprisonment up to 3 months or fine Rs 250 or both",
+      "type": "violent",
+      "cognizable": false,
+      "bailable": true
+    },
+    "IPC-376": {
+      "bns_code": "BNS-64",
+      "title": "Punishment for rape",
+      "punishment": "Imprisonment up to 7 years or fine Rs 5000 or both; in certain cases life imprisonment",
+      "type": "violent",
+      "cognizable": true,
+      "bailable": false
+    },
+    "IPC-379": {
+      "bns_code": "BNS-303",
+      "title": "Punishment for theft",
+      "punishment": "Imprisonment up to 3 years or fine Rs 10000 or both",
+      "type": "property",
+      "cognizable": false,
+      "bailable": true
+    },
+    "IPC-380": {
+      "bns_code": "BNS-304",
+      "title": "Theft in dwelling house, etc.",
+      "punishment": "Imprisonment up to 7 years or fine Rs 10000 or both",
+      "type": "property",
+      "cognizable": true,
+      "bailable": false
+    },
+    "IPC-392": {
+      "bns_code": "BNS-305",
+      "title": "Punishment for dacoity",
+      "punishment": "Imprisonment up to 10 years or life imprisonment + fine",
+      "type": "property",
+      "cognizable": true,
+      "bailable": false
+    },
+    "IPC-420": {
+      "bns_code": "BNS-318",
+      "title": "Cheating and dishonestly inducing delivery of property",
+      "punishment": "Imprisonment up to 7 years or fine Rs 10000 or both",
+      "type": "property",
+      "cognizable": false,
+      "bailable": true
+    },
+    "IPC-498A": {
+      "bns_code": "BNS-85",
+      "title": "Cruelty by husband or his relatives",
+      "punishment": "Imprisonment up to 3 years or fine Rs 10000 or both",
+      "type": "personal",
+      "cognizable": true,
+      "bailable": false
+    }
+  }
+}

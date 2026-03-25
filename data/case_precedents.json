@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "Sample case precedents for verdict prediction",
+    "total_cases": 50,
+    "note": "This is a sample dataset. In production, integrate with legal databases like AIR, SCC, etc."
+  },
+  "cases": [
+    {
+      "name": "Sharma v. State of Delhi",
+      "type": "Murder",
+      "section": "BNS-103",
+      "ipc_section": "IPC-302",
+      "year": 2023,
+      "verdict": "Guilty",
+      "outcome": "Life imprisonment",
+      "key_factors": ["Eyewitness testimony", "Weapon recovered", "Motive established"],
+      "conviction_rate": 0.85
+    },
+    {
+      "name": "Kumar v. State of Karnataka",
+      "type": "Theft",
+      "section": "BNS-303",
+      "ipc_section": "IPC-379",
+      "year": 2024,
+      "verdict": "Guilty",
+      "outcome": "7 years imprisonment + ₹10,000 fine",
+      "key_factors": ["CCTV footage", "Stolen items recovered", "Confession"],
+      "conviction_rate": 0.78
+    },
+    {
+      "name": "Patel v. State of Gujarat",
+      "type": "Hurt",
+      "section": "BNS-115",
+      "ipc_section": "IPC-323",
+      "year": 2023,
+      "verdict": "Guilty",
+      "outcome": "6 months imprisonment + ₹5,000 fine",
+      "key_factors": ["Medical certificate", "Witness testimony", "Police investigation"],
+      "conviction_rate": 0.72
+    },
+    {
+      "name": "Singh v. State of Punjab",
+      "type": "Criminal Intimidation",
+      "section": "BNS-350",
+      "ipc_section": "IPC-503",
+      "year": 2024,
+      "verdict": "Not Guilty",
+      "outcome": "Acquittal",
+      "key_factors": ["Insufficient evidence of threat", "No witnesses", "Contradictory statements"],
+      "conviction_rate": 0.35
+    },
+    {
+      "name": "Desai v. State of Maharashtra",
+      "type": "Cheating",
+      "section": "BNS-317",
+      "ipc_section": "IPC-420",
+      "year": 2023,
+      "verdict": "Guilty",
+      "outcome": "3 years imprisonment + ₹50,000 fine",
+      "key_factors": ["Bank statements", "Forged documents", "Multiple victims"],
+      "conviction_rate": 0.68
+    },
+    {
+      "name": "Menon v. State of Kerala",
+      "type": "Wrongful Restraint",
+      "section": "BNS-356",
+      "ipc_section": "IPC-341",
+      "year": 2024,
+      "verdict": "Guilty",
+      "outcome": "2 months imprisonment + ₹1,000 fine",
+      "key_factors": ["Victim testimony", "Medical report", "Witness corroboration"],
+      "conviction_rate": 0.65
+    },
+    {
+      "name": "Bhat v. State of Goa",
+      "type": "Assault",
+      "section": "BNS-352",
+      "ipc_section": "IPC-336",
+      "year": 2023,
+      "verdict": "Not Guilty",
+      "outcome": "Acquittal",
+      "key_factors": ["Self-defense claim sustained", "Inconsistent prosecution", "Credible witness"],
+      "conviction_rate": 0.42
+    },
+    {
+      "name": "Gupta v. State of Rajasthan",
+      "type": "Property Dispute",
+      "section": "BNS-379",
+      "ipc_section": "IPC-404",
+      "year": 2024,
+      "verdict": "Partial Conviction",
+      "outcome": "Property restoration + ₹25,000 compensation",
+      "key_factors": ["Land records", "Disputed ownership", "Compromise verdict"],
+      "conviction_rate": 0.58
+    }
+  ]
+}

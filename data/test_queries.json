@@ -1,0 +1,180 @@
+{
+  "description": "Test queries for evaluating legal section accuracy",
+  "queries": [
+    {
+      "id": 1,
+      "query": "Someone stole my phone from my pocket",
+      "expected_bns": ["BNS-305"],
+      "expected_ipc": ["IPC-378"],
+      "category": "theft"
+    },
+    {
+      "id": 2,
+      "query": "A gang of 6 people looted my house at gunpoint",
+      "expected_bns": ["BNS-66"],
+      "expected_ipc": ["IPC-395"],
+      "category": "dacoity"
+    },
+    {
+      "id": 3,
+      "query": "My husband beats me daily and demands more dowry",
+      "expected_bns": ["BNS-85"],
+      "expected_ipc": ["IPC-498A"],
+      "category": "domestic_violence"
+    },
+    {
+      "id": 4,
+      "query": "Someone hit my car and ran away, my friend died",
+      "expected_bns": ["BNS-124"],
+      "expected_ipc": ["IPC-304A"],
+      "category": "accident"
+    },
+    {
+      "id": 5,
+      "query": "I was cheated by an online seller who took my money and never delivered",
+      "expected_bns": ["BNS-318"],
+      "expected_ipc": ["IPC-420"],
+      "category": "fraud"
+    },
+    {
+      "id": 6,
+      "query": "Someone is sending me death threats on WhatsApp",
+      "expected_bns": ["BNS-349"],
+      "expected_ipc": ["IPC-506"],
+      "category": "threat"
+    },
+    {
+      "id": 7,
+      "query": "A man has been following me everywhere for weeks",
+      "expected_bns": ["BNS-78"],
+      "expected_ipc": ["IPC-354D"],
+      "category": "stalking"
+    },
+    {
+      "id": 8,
+      "query": "My neighbor broke into my house and stole jewelry",
+      "expected_bns": ["BNS-331", "BNS-305"],
+      "expected_ipc": ["IPC-453", "IPC-378"],
+      "category": "housebreaking"
+    },
+    {
+      "id": 9,
+      "query": "Someone punched me in the face during an argument",
+      "expected_bns": ["BNS-115"],
+      "expected_ipc": ["IPC-323"],
+      "category": "assault"
+    },
+    {
+      "id": 10,
+      "query": "My business partner took all the company funds and disappeared",
+      "expected_bns": ["BNS-316"],
+      "expected_ipc": ["IPC-406"],
+      "category": "breach_of_trust"
+    },
+    {
+      "id": 11,
+      "query": "Someone attacked me with a knife",
+      "expected_bns": ["BNS-118"],
+      "expected_ipc": ["IPC-324"],
+      "category": "assault_weapon"
+    },
+    {
+      "id": 12,
+      "query": "My daughter-in-law died within 2 years of marriage, there were burn marks",
+      "expected_bns": ["BNS-103"],
+      "expected_ipc": ["IPC-304B"],
+      "category": "dowry_death"
+    },
+    {
+      "id": 13,
+      "query": "Someone snatched my gold chain while I was walking",
+      "expected_bns": ["BNS-306"],
+      "expected_ipc": ["IPC-378"],
+      "category": "snatching"
+    },
+    {
+      "id": 14,
+      "query": "A man groped a woman in the bus",
+      "expected_bns": ["BNS-74"],
+      "expected_ipc": ["IPC-354"],
+      "category": "molestation"
+    },
+    {
+      "id": 15,
+      "query": "Someone created a fake Aadhaar card using my photo",
+      "expected_bns": ["BNS-340"],
+      "expected_ipc": ["IPC-463"],
+      "category": "forgery"
+    },
+    {
+      "id": 16,
+      "query": "A reckless driver almost hit pedestrians on the road",
+      "expected_bns": ["BNS-125"],
+      "expected_ipc": ["IPC-336"],
+      "category": "rash_driving"
+    },
+    {
+      "id": 17,
+      "query": "Someone is demanding money threatening to release my private photos",
+      "expected_bns": ["BNS-308"],
+      "expected_ipc": ["IPC-383"],
+      "category": "extortion"
+    },
+    {
+      "id": 18,
+      "query": "My child was kidnapped from school",
+      "expected_bns": ["BNS-137"],
+      "expected_ipc": ["IPC-363"],
+      "category": "kidnapping"
+    },
+    {
+      "id": 19,
+      "query": "Somebody posted defamatory content about me online",
+      "expected_bns": ["BNS-356"],
+      "expected_ipc": ["IPC-499"],
+      "category": "defamation"
+    },
+    {
+      "id": 20,
+      "query": "Two people tried to rob me at knifepoint on the highway at night",
+      "expected_bns": ["BNS-65"],
+      "expected_ipc": ["IPC-392"],
+      "category": "robbery"
+    },
+    {
+      "id": 21,
+      "query": "Someone installed a hidden camera in the women's changing room",
+      "expected_bns": ["BNS-77"],
+      "expected_ipc": ["IPC-354C"],
+      "category": "voyeurism"
+    },
+    {
+      "id": 22,
+      "query": "Someone impersonated me to withdraw money from my bank",
+      "expected_bns": ["BNS-319"],
+      "expected_ipc": ["IPC-419"],
+      "category": "impersonation"
+    },
+    {
+      "id": 23,
+      "query": "My employer is making unwanted sexual advances at the workplace",
+      "expected_bns": ["BNS-75"],
+      "expected_ipc": ["IPC-354A"],
+      "category": "sexual_harassment"
+    },
+    {
+      "id": 24,
+      "query": "A driver hit a cyclist and the cyclist broke his leg",
+      "expected_bns": ["BNS-126"],
+      "expected_ipc": ["IPC-337"],
+      "category": "negligent_hurt"
+    },
+    {
+      "id": 25,
+      "query": "Someone vandalized my car by scratching it with a key",
+      "expected_bns": ["BNS-69"],
+      "expected_ipc": ["IPC-425"],
+      "category": "mischief"
+    }
+  ]
+}

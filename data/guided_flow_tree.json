@@ -1,0 +1,423 @@
+{
+  "start": {
+    "question": "What happened to you?",
+    "question_hi": "आपके साथ क्या हुआ?",
+    "options": [
+      {"label": "Accident / Vehicle Issue", "label_hi": "दुर्घटना / वाहन समस्या", "next": "accident_branch"},
+      {"label": "Theft / Robbery", "label_hi": "चोरी / लूट", "next": "theft_branch"},
+      {"label": "Assault / Violence", "label_hi": "मारपीट / हिंसा", "next": "assault_branch"},
+      {"label": "Family / Domestic Issue", "label_hi": "पारिवारिक / घरेलू समस्या", "next": "family_branch"},
+      {"label": "Fraud / Cheating", "label_hi": "धोखाधड़ी / ठगी", "next": "fraud_branch"},
+      {"label": "Sexual Offence", "label_hi": "यौन अपराध", "next": "sexual_branch"},
+      {"label": "Property Dispute", "label_hi": "संपत्ति विवाद", "next": "property_branch"},
+      {"label": "Threat / Intimidation", "label_hi": "धमकी / डराना", "next": "threat_branch"},
+      {"label": "Other", "label_hi": "अन्य", "next": "free_text"}
+    ]
+  },
+
+  "accident_branch": {
+    "question": "What kind of accident?",
+    "question_hi": "किस तरह की दुर्घटना?",
+    "options": [
+      {"label": "Road accident - someone died", "label_hi": "सड़क दुर्घटना - किसी की मृत्यु", "next": "accident_death"},
+      {"label": "Road accident - someone injured", "label_hi": "सड़क दुर्घटना - कोई घायल", "next": "accident_injury"},
+      {"label": "Rash / negligent driving", "label_hi": "लापरवाह / तेज़ गाड़ी चलाना", "next": "accident_rash"},
+      {"label": "Hit and run", "label_hi": "टक्कर मारकर भागना", "next": "accident_hitrun"}
+    ]
+  },
+  "accident_death": {
+    "terminal": true,
+    "sections": ["BNS-124", "BNS-125"],
+    "ipc_sections": ["IPC-304A", "IPC-336"],
+    "summary": "Causing death by rash or negligent act",
+    "summary_hi": "लापरवाही से मृत्यु",
+    "next_steps": ["File FIR at nearest police station", "Collect evidence (photos, witnesses)", "Get medical/post-mortem report"],
+    "escalation": false
+  },
+  "accident_injury": {
+    "terminal": true,
+    "sections": ["BNS-125", "BNS-126"],
+    "ipc_sections": ["IPC-336", "IPC-337"],
+    "summary": "Causing hurt by rash or negligent act",
+    "summary_hi": "लापरवाही से चोट",
+    "next_steps": ["Get medical treatment first", "File FIR or complaint", "Collect evidence (photos, witnesses)", "Claim motor accident compensation"],
+    "escalation": false
+  },
+  "accident_rash": {
+    "terminal": true,
+    "sections": ["BNS-125"],
+    "ipc_sections": ["IPC-336"],
+    "summary": "Act endangering life or personal safety",
+    "summary_hi": "जीवन या व्यक्तिगत सुरक्षा को खतरा",
+    "next_steps": ["Note vehicle number", "File complaint at traffic police station", "Collect witness statements"],
+    "escalation": false
+  },
+  "accident_hitrun": {
+    "terminal": true,
+    "sections": ["BNS-124", "BNS-125"],
+    "ipc_sections": ["IPC-304A", "IPC-336"],
+    "summary": "Hit and run - death/injury by negligence",
+    "summary_hi": "टक्कर मारकर भागना",
+    "next_steps": ["Call police (100) immediately", "Note vehicle details if possible", "Get CCTV footage from area", "File FIR at nearest police station"],
+    "escalation": true
+  },
+
+  "theft_branch": {
+    "question": "What was stolen and how?",
+    "question_hi": "क्या चोरी हुआ और कैसे?",
+    "options": [
+      {"label": "Something was stolen (no violence)", "label_hi": "चोरी हुई (बिना हिंसा)", "next": "theft_simple"},
+      {"label": "Snatched from my hand/body", "label_hi": "छीना गया", "next": "theft_snatch"},
+      {"label": "Robbed with force/threat", "label_hi": "ज़ोर-ज़बरदस्ती से लूटा", "next": "theft_robbery"},
+      {"label": "Gang of 5+ people robbed", "label_hi": "5+ लोगों के गिरोह ने लूटा", "next": "theft_dacoity"},
+      {"label": "House was broken into", "label_hi": "घर में सेंधमारी", "next": "theft_housebreak"}
+    ]
+  },
+  "theft_simple": {
+    "terminal": true,
+    "sections": ["BNS-305"],
+    "ipc_sections": ["IPC-378"],
+    "summary": "Theft - dishonest taking of property",
+    "summary_hi": "चोरी",
+    "next_steps": ["File FIR at police station", "List all stolen items with value", "Check for CCTV footage", "Inform bank if cards/documents stolen"],
+    "escalation": false
+  },
+  "theft_snatch": {
+    "terminal": true,
+    "sections": ["BNS-306"],
+    "ipc_sections": ["IPC-378"],
+    "summary": "Snatching",
+    "summary_hi": "छीना-झपटी",
+    "next_steps": ["Call police (100) immediately", "Note description of snatcher", "Check for CCTV", "Get medical help if injured"],
+    "escalation": false
+  },
+  "theft_robbery": {
+    "terminal": true,
+    "sections": ["BNS-65"],
+    "ipc_sections": ["IPC-392"],
+    "summary": "Robbery - theft with force or threat",
+    "summary_hi": "लूट - ज़ोर या धमकी से चोरी",
+    "next_steps": ["Call police (100) immediately", "Do not resist if weapon is involved", "Note descriptions of robbers", "File FIR immediately"],
+    "escalation": true
+  },
+  "theft_dacoity": {
+    "terminal": true,
+    "sections": ["BNS-66"],
+    "ipc_sections": ["IPC-395"],
+    "summary": "Dacoity - gang robbery by 5+ persons",
+    "summary_hi": "डकैती - 5+ लोगों द्वारा लूट",
+    "next_steps": ["Call police (100) immediately", "Stay safe, do not confront", "Note as many details as possible", "File FIR immediately"],
+    "escalation": true
+  },
+  "theft_housebreak": {
+    "terminal": true,
+    "sections": ["BNS-331", "BNS-305"],
+    "ipc_sections": ["IPC-453", "IPC-378"],
+    "summary": "House-breaking and theft",
+    "summary_hi": "सेंधमारी और चोरी",
+    "next_steps": ["Call police (100)", "Do not touch anything (preserve evidence)", "List all stolen items", "Check for CCTV footage"],
+    "escalation": false
+  },
+
+  "assault_branch": {
+    "question": "What kind of assault or violence?",
+    "question_hi": "किस तरह की मारपीट या हिंसा?",
+    "options": [
+      {"label": "Beaten / slapped / punched", "label_hi": "मारा / थप्पड़ / मुक्का", "next": "assault_simple"},
+      {"label": "Serious injury (fracture, etc.)", "label_hi": "गंभीर चोट (हड्डी टूटना आदि)", "next": "assault_grievous"},
+      {"label": "Attack with weapon (knife, acid, etc.)", "label_hi": "हथियार से हमला (चाकू, तेज़ाब)", "next": "assault_weapon"},
+      {"label": "Attempted murder", "label_hi": "हत्या का प्रयास", "next": "assault_attempt_murder"},
+      {"label": "Mob violence / rioting", "label_hi": "भीड़ हिंसा / दंगा", "next": "assault_riot"}
+    ]
+  },
+  "assault_simple": {
+    "terminal": true,
+    "sections": ["BNS-115"],
+    "ipc_sections": ["IPC-323"],
+    "summary": "Voluntarily causing hurt",
+    "summary_hi": "स्वेच्छा से चोट पहुँचाना",
+    "next_steps": ["Get medical treatment and MLC (medico-legal certificate)", "File complaint at police station", "Collect witness statements", "This is bailable - accused can get bail"],
+    "escalation": false
+  },
+  "assault_grievous": {
+    "terminal": true,
+    "sections": ["BNS-117"],
+    "ipc_sections": ["IPC-325"],
+    "summary": "Voluntarily causing grievous hurt",
+    "summary_hi": "स्वेच्छा से गंभीर चोट पहुँचाना",
+    "next_steps": ["Get immediate medical treatment", "Get MLC from hospital", "File FIR at police station", "Collect evidence and witness statements"],
+    "escalation": false
+  },
+  "assault_weapon": {
+    "terminal": true,
+    "sections": ["BNS-118"],
+    "ipc_sections": ["IPC-324"],
+    "summary": "Causing hurt by dangerous weapons or means",
+    "summary_hi": "खतरनाक हथियारों से चोट",
+    "next_steps": ["Call police (100) and ambulance (108) immediately", "Get medical treatment", "File FIR", "Preserve evidence (weapon, clothing)"],
+    "escalation": true
+  },
+  "assault_attempt_murder": {
+    "terminal": true,
+    "sections": ["BNS-109"],
+    "ipc_sections": ["IPC-307"],
+    "summary": "Attempt to murder",
+    "summary_hi": "हत्या का प्रयास",
+    "next_steps": ["Call police (100) immediately", "Get emergency medical care", "File FIR - this is a non-bailable offence", "Seek protection order if needed"],
+    "escalation": true
+  },
+  "assault_riot": {
+    "terminal": true,
+    "sections": ["BNS-196", "BNS-197"],
+    "ipc_sections": ["IPC-147", "IPC-148"],
+    "summary": "Rioting / mob violence",
+    "summary_hi": "दंगा / भीड़ हिंसा",
+    "next_steps": ["Stay safe, move to secure location", "Call police (100)", "Document evidence if safe to do so", "File FIR"],
+    "escalation": true
+  },
+
+  "family_branch": {
+    "question": "What family/domestic issue?",
+    "question_hi": "कौन सी पारिवारिक/घरेलू समस्या?",
+    "options": [
+      {"label": "Domestic violence / cruelty by husband", "label_hi": "घरेलू हिंसा / पति द्वारा क्रूरता", "next": "family_dv"},
+      {"label": "Dowry demand / harassment", "label_hi": "दहेज़ की मांग / उत्पीड़न", "next": "family_dowry"},
+      {"label": "Dowry death", "label_hi": "दहेज़ मृत्यु", "next": "family_dowry_death"},
+      {"label": "Child kidnapping / custody", "label_hi": "बच्चे का अपहरण / कस्टडी", "next": "family_kidnap"}
+    ]
+  },
+  "family_dv": {
+    "terminal": true,
+    "sections": ["BNS-85"],
+    "ipc_sections": ["IPC-498A"],
+    "summary": "Cruelty by husband or relatives - domestic violence",
+    "summary_hi": "पति या रिश्तेदारों द्वारा क्रूरता - घरेलू हिंसा",
+    "next_steps": ["Call Women Helpline (181)", "File complaint under Domestic Violence Act", "File FIR under BNS Section 85", "Contact nearest Protection Officer", "Seek shelter at One Stop Centre"],
+    "escalation": true
+  },
+  "family_dowry": {
+    "terminal": true,
+    "sections": ["BNS-85"],
+    "ipc_sections": ["IPC-498A"],
+    "summary": "Dowry harassment / cruelty",
+    "summary_hi": "दहेज़ उत्पीड़न / क्रूरता",
+    "next_steps": ["File FIR at police station", "File complaint under Dowry Prohibition Act", "Contact Women Helpline (181)", "Keep evidence of dowry demands"],
+    "escalation": false
+  },
+  "family_dowry_death": {
+    "terminal": true,
+    "sections": ["BNS-103", "BNS-85"],
+    "ipc_sections": ["IPC-304B", "IPC-498A"],
+    "summary": "Dowry death",
+    "summary_hi": "दहेज़ मृत्यु",
+    "next_steps": ["Call police (100) immediately", "Demand post-mortem examination", "File FIR - non-bailable offence", "Contact NALSA (15100) for legal aid"],
+    "escalation": true
+  },
+  "family_kidnap": {
+    "terminal": true,
+    "sections": ["BNS-137"],
+    "ipc_sections": ["IPC-363"],
+    "summary": "Kidnapping from lawful guardianship",
+    "summary_hi": "वैध संरक्षण से अपहरण",
+    "next_steps": ["Call police (100) immediately", "File FIR - non-bailable offence", "Contact Child Helpline (1098) if minor", "Provide recent photo and details"],
+    "escalation": true
+  },
+
+  "fraud_branch": {
+    "question": "What kind of fraud or cheating?",
+    "question_hi": "किस तरह की धोखाधड़ी?",
+    "options": [
+      {"label": "Cheated / scammed out of money", "label_hi": "पैसों की ठगी", "next": "fraud_cheating"},
+      {"label": "Identity fraud / impersonation", "label_hi": "पहचान धोखाधड़ी / नकली बनकर", "next": "fraud_identity"},
+      {"label": "Breach of trust / embezzlement", "label_hi": "विश्वासघात / गबन", "next": "fraud_trust"},
+      {"label": "Forgery / fake documents", "label_hi": "जालसाज़ी / नकली दस्तावेज़", "next": "fraud_forgery"},
+      {"label": "Online / cyber fraud", "label_hi": "ऑनलाइन / साइबर धोखाधड़ी", "next": "fraud_cyber"}
+    ]
+  },
+  "fraud_cheating": {
+    "terminal": true,
+    "sections": ["BNS-318"],
+    "ipc_sections": ["IPC-420"],
+    "summary": "Cheating and dishonestly inducing delivery of property",
+    "summary_hi": "धोखाधड़ी",
+    "next_steps": ["File FIR at police station", "Collect all evidence (receipts, messages, contracts)", "File complaint on cybercrime.gov.in if online", "Consult a lawyer for civil recovery"],
+    "escalation": false
+  },
+  "fraud_identity": {
+    "terminal": true,
+    "sections": ["BNS-319"],
+    "ipc_sections": ["IPC-419"],
+    "summary": "Cheating by personation / identity fraud",
+    "summary_hi": "नकली पहचान से धोखाधड़ी",
+    "next_steps": ["File FIR at police station", "Report to identity document issuing authority", "Change passwords and secure accounts", "File complaint on cybercrime.gov.in"],
+    "escalation": false
+  },
+  "fraud_trust": {
+    "terminal": true,
+    "sections": ["BNS-316"],
+    "ipc_sections": ["IPC-406"],
+    "summary": "Criminal breach of trust",
+    "summary_hi": "आपराधिक विश्वासघात",
+    "next_steps": ["File FIR at police station", "Collect evidence of trust relationship", "Gather documents showing misappropriation", "Consult a lawyer"],
+    "escalation": false
+  },
+  "fraud_forgery": {
+    "terminal": true,
+    "sections": ["BNS-340"],
+    "ipc_sections": ["IPC-463"],
+    "summary": "Forgery - making false documents",
+    "summary_hi": "जालसाज़ी - नकली दस्तावेज़ बनाना",
+    "next_steps": ["File FIR at police station", "Preserve the forged document as evidence", "Get expert opinion on document authenticity", "Consult a lawyer"],
+    "escalation": false
+  },
+  "fraud_cyber": {
+    "terminal": true,
+    "sections": ["BNS-318"],
+    "ipc_sections": ["IPC-420"],
+    "summary": "Online fraud / cyber cheating",
+    "summary_hi": "ऑनलाइन धोखाधड़ी",
+    "next_steps": ["Report on cybercrime.gov.in or call 1930", "File FIR at cyber crime police station", "Block cards and change passwords immediately", "Preserve screenshots and transaction records"],
+    "escalation": false
+  },
+
+  "sexual_branch": {
+    "question": "What kind of sexual offence?",
+    "question_hi": "किस तरह का यौन अपराध?",
+    "options": [
+      {"label": "Sexual harassment / unwanted advances", "label_hi": "यौन उत्पीड़न / अवांछित संपर्क", "next": "sexual_harassment"},
+      {"label": "Molestation / groping", "label_hi": "छेड़छाड़", "next": "sexual_molestation"},
+      {"label": "Stalking / following", "label_hi": "पीछा करना", "next": "sexual_stalking"},
+      {"label": "Voyeurism / secret recording", "label_hi": "ताक-झाँक / गुप्त रिकॉर्डिंग", "next": "sexual_voyeurism"},
+      {"label": "Rape / sexual assault", "label_hi": "बलात्कार / यौन हमला", "next": "sexual_rape"}
+    ]
+  },
+  "sexual_harassment": {
+    "terminal": true,
+    "sections": ["BNS-75"],
+    "ipc_sections": ["IPC-354A"],
+    "summary": "Sexual harassment",
+    "summary_hi": "यौन उत्पीड़न",
+    "next_steps": ["File complaint with Internal Complaints Committee (if workplace)", "File FIR at police station", "Call Women Helpline (181)", "Collect evidence (messages, witnesses)"],
+    "escalation": false
+  },
+  "sexual_molestation": {
+    "terminal": true,
+    "sections": ["BNS-74"],
+    "ipc_sections": ["IPC-354"],
+    "summary": "Assault to outrage modesty of woman",
+    "summary_hi": "महिला की लज्जा भंग करने का प्रयास",
+    "next_steps": ["Call police (100) immediately", "File FIR - cognizable offence", "Get medical examination if needed", "Call Women Helpline (181)"],
+    "escalation": true
+  },
+  "sexual_stalking": {
+    "terminal": true,
+    "sections": ["BNS-78"],
+    "ipc_sections": ["IPC-354D"],
+    "summary": "Stalking",
+    "summary_hi": "पीछा करना",
+    "next_steps": ["File FIR at police station", "Document all instances of stalking", "Block the person on all platforms", "Seek protection order from court"],
+    "escalation": false
+  },
+  "sexual_voyeurism": {
+    "terminal": true,
+    "sections": ["BNS-77"],
+    "ipc_sections": ["IPC-354C"],
+    "summary": "Voyeurism - watching or capturing private acts",
+    "summary_hi": "ताक-झाँक - निजी कृत्यों को देखना या रिकॉर्ड करना",
+    "next_steps": ["File FIR at police station", "Preserve evidence of recording/photos", "Report on cybercrime.gov.in if shared online", "Seek deletion order from court"],
+    "escalation": false
+  },
+  "sexual_rape": {
+    "terminal": true,
+    "sections": ["BNS-63"],
+    "ipc_sections": ["IPC-376"],
+    "summary": "Rape / sexual assault",
+    "summary_hi": "बलात्कार / यौन हमला",
+    "next_steps": ["Call police (100) immediately", "Go to nearest hospital for medical examination", "FIR MUST be registered - police cannot refuse", "Call Women Helpline (181)", "Contact NALSA (15100) for free legal aid", "Do not wash clothes or bathe (preserve evidence)"],
+    "escalation": true
+  },
+
+  "property_branch": {
+    "question": "What kind of property issue?",
+    "question_hi": "किस तरह की संपत्ति समस्या?",
+    "options": [
+      {"label": "Someone trespassed on my property", "label_hi": "मेरी संपत्ति पर अतिक्रमण", "next": "property_trespass"},
+      {"label": "House break-in", "label_hi": "घर में सेंधमारी", "next": "theft_housebreak"},
+      {"label": "Property damage / vandalism", "label_hi": "संपत्ति को नुकसान", "next": "property_mischief"},
+      {"label": "Land grabbing / encroachment", "label_hi": "ज़मीन हड़पना / अतिक्रमण", "next": "property_trespass"}
+    ]
+  },
+  "property_trespass": {
+    "terminal": true,
+    "sections": ["BNS-329", "BNS-330"],
+    "ipc_sections": ["IPC-447", "IPC-448"],
+    "summary": "Criminal trespass / house trespass",
+    "summary_hi": "अतिक्रमण / घर में अतिक्रमण",
+    "next_steps": ["File complaint at police station", "Collect evidence of ownership/possession", "Get witness statements", "Consult a civil lawyer for eviction"],
+    "escalation": false
+  },
+  "property_mischief": {
+    "terminal": true,
+    "sections": ["BNS-69"],
+    "ipc_sections": ["IPC-425"],
+    "summary": "Mischief - destruction of property",
+    "summary_hi": "संपत्ति को नुकसान",
+    "next_steps": ["File complaint at police station", "Document damage with photos/videos", "Get repair cost estimate", "File civil suit for compensation"],
+    "escalation": false
+  },
+
+  "threat_branch": {
+    "question": "What kind of threat?",
+    "question_hi": "किस तरह की धमकी?",
+    "options": [
+      {"label": "Threatened with injury / harm", "label_hi": "चोट / नुकसान की धमकी", "next": "threat_simple"},
+      {"label": "Death threat", "label_hi": "जान से मारने की धमकी", "next": "threat_death"},
+      {"label": "Anonymous threats", "label_hi": "गुमनाम धमकी", "next": "threat_anonymous"},
+      {"label": "Extortion / blackmail", "label_hi": "उगाही / ब्लैकमेल", "next": "threat_extortion"}
+    ]
+  },
+  "threat_simple": {
+    "terminal": true,
+    "sections": ["BNS-349"],
+    "ipc_sections": ["IPC-506"],
+    "summary": "Criminal intimidation",
+    "summary_hi": "आपराधिक धमकी",
+    "next_steps": ["File complaint at police station", "Save evidence of threats (messages, recordings)", "Seek protection order if needed", "Inform trusted people about the threats"],
+    "escalation": false
+  },
+  "threat_death": {
+    "terminal": true,
+    "sections": ["BNS-349"],
+    "ipc_sections": ["IPC-506"],
+    "summary": "Criminal intimidation - death threat",
+    "summary_hi": "जान से मारने की धमकी",
+    "next_steps": ["Call police (100) immediately", "File FIR at police station", "Save all evidence of death threats", "Seek protection order from court", "Non-bailable if threat to cause death"],
+    "escalation": true
+  },
+  "threat_anonymous": {
+    "terminal": true,
+    "sections": ["BNS-351"],
+    "ipc_sections": ["IPC-507"],
+    "summary": "Criminal intimidation by anonymous communication",
+    "summary_hi": "गुमनाम संचार द्वारा धमकी",
+    "next_steps": ["File FIR at police station", "Report on cybercrime.gov.in if digital", "Save all anonymous communications", "Request police to trace the source"],
+    "escalation": false
+  },
+  "threat_extortion": {
+    "terminal": true,
+    "sections": ["BNS-308"],
+    "ipc_sections": ["IPC-383"],
+    "summary": "Extortion - inducing fear to extract property",
+    "summary_hi": "उगाही - डरा-धमकाकर संपत्ति लेना",
+    "next_steps": ["File FIR at police station", "Do not pay or comply with demands", "Record all communications as evidence", "Seek police protection if needed"],
+    "escalation": true
+  },
+
+  "free_text": {
+    "terminal": false,
+    "type": "free_text",
+    "prompt": "Please describe your legal issue in your own words. We'll try to find the relevant legal sections for you.",
+    "prompt_hi": "कृपया अपनी कानूनी समस्या अपने शब्दों में बताएं। हम आपके लिए संबंधित कानूनी धाराएं खोजने का प्रयास करेंगे।",
+    "handler": "rag_pipeline"
+  }
+}
