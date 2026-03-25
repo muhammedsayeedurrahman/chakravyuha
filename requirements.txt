@@ -1,46 +1,18 @@
+# Slim requirements for Render free tier
+# Only essentials for API to start and serve requests
+
 # Core Framework
 fastapi>=0.104.0
-uvicorn>=0.24.0
-gradio>=4.0.0
+uvicorn[standard]>=0.24.0
 python-dotenv>=1.0.0
 pydantic>=2.0.0
-pydantic-settings>=2.0.0
 
-# Sarvam AI (ASR + TTS + Translation)
-sarvamai>=0.1.27
+# HTTP clients (LLM API calls)
+httpx>=0.25.0
 
-# LLM / RAG
-langchain>=0.2.0
-langchain-community>=0.2.0
-chromadb>=0.4.0
-sentence-transformers>=2.2.0
-transformers>=4.35.0
+# Keyword search (lightweight RAG fallback)
 rank-bm25>=0.2.2
 
-# Audio & Speech (IndicWhisper, Meta MMS, Piper)
-torch>=2.0.0
-torchaudio>=2.0.0
-piper-tts>=1.2.0
-
-# Web Scraping (corpus ingestion)
-beautifulsoup4>=4.12.0
+# Web requests
 requests>=2.31.0
-
-# Indian NLP
-indic-nlp-library>=0.81
-
-# Browser Automation
-playwright>=1.40.0
-
-# HTTP
-httpx>=0.25.0
-aiohttp>=3.9.0
-
-# Database
-sqlalchemy>=2.0.0
-psycopg2-binary>=2.9.0
-
-# Testing
-pytest>=7.0.0
-pytest-asyncio>=0.23.0
-pytest-cov>=4.1.0
+beautifulsoup4>=4.12.0
