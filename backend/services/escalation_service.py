@@ -10,18 +10,28 @@ from backend.models.schemas import EscalationInfo
 logger = logging.getLogger("chakravyuha")
 
 # Keywords mapped to severity levels
+# NOTE: Only single words here — multi-word phrases are checked separately via
+# _MULTI_WORD_HIGH and _MULTI_WORD_MEDIUM below.
 HIGH_SEVERITY_KEYWORDS = {
-    "murder", "kill", "death", "rape", "sexual assault", "kidnap", "abduct",
-    "acid attack", "terrorism", "terrorist", "bomb", "suicide", "die",
-    "life threatening", "weapon", "gun", "knife", "hostage", "trafficking",
+    "murder", "kill", "death", "rape", "kidnap", "abduct",
+    "terrorism", "terrorist", "bomb", "suicide", "die",
+    "weapon", "gun", "knife", "hostage", "trafficking",
     "hatya", "balatkaar", "apmaan", "maut", "maar", "aatankvad",
 }
 
 MEDIUM_SEVERITY_KEYWORDS = {
     "assault", "hurt", "grievous", "robbery", "dacoity", "extortion",
-    "domestic violence", "dowry", "harassment", "stalking", "threat",
+    "dowry", "harassment", "stalking", "threat",
     "blackmail", "arson", "riot", "gang", "marpeet", "dhamki", "loot",
 }
+
+# Multi-word phrases checked via substring match on the full text
+_MULTI_WORD_HIGH = [
+    "sexual assault", "acid attack", "life threatening",
+]
+_MULTI_WORD_MEDIUM = [
+    "domestic violence", "identity theft",
+]
 
 EMERGENCY_KEYWORDS = {
     "help", "emergency", "urgent", "danger", "dying", "bleeding",
@@ -37,10 +47,15 @@ class EscalationService:
         text_lower = text.lower()
         words = set(text_lower.split())
 
+        # Check single-word keywords + multi-word phrases
         if words & HIGH_SEVERITY_KEYWORDS or words & EMERGENCY_KEYWORDS:
+            return "HIGH"
+        if any(phrase in text_lower for phrase in _MULTI_WORD_HIGH):
             return "HIGH"
 
         if words & MEDIUM_SEVERITY_KEYWORDS:
+            return "MEDIUM"
+        if any(phrase in text_lower for phrase in _MULTI_WORD_MEDIUM):
             return "MEDIUM"
 
         # Check section-based severity

@@ -541,7 +541,7 @@ async def llm_classify(text: str, original_text: str | None = None) -> ClassifyR
 
         # Run LLM call with 5s total timeout (2s per provider inside)
         result = await asyncio.wait_for(
-            asyncio.get_event_loop().run_in_executor(
+            asyncio.get_running_loop().run_in_executor(
                 None, lambda: _try_llm_providers(llm, prompt)
             ),
             timeout=5.0,
