@@ -164,7 +164,7 @@ def _rag_fallback(query: str, english_query: str | None = None) -> object:
 
         if results:
             # Confidence gating: check if top result meets threshold
-            top_score = results[0].get("score", 0.0) if results else 0.0
+            top_score = results[0].score if results else 0.0
             if top_score < _RAG_CONFIDENCE_THRESHOLD and top_score > 0:
                 logger.info("RAG score %.2f below threshold %.2f, using guided fallback",
                             top_score, _RAG_CONFIDENCE_THRESHOLD)
@@ -173,7 +173,7 @@ def _rag_fallback(query: str, english_query: str | None = None) -> object:
             guidance_parts = []
             section_refs = []
             for r in results:
-                sec = r["section"]
+                sec = r.section
                 section_refs.append(f"{sec.section_id} — {sec.title} ({sec.act})")
                 guidance_parts.append(
                     f"{sec.section_id}: {sec.title}\n{sec.description}"
