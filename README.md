@@ -7,6 +7,7 @@
 ---
 
 ## Quick Start
+[hindsight (2).pptx](https://github.com/user-attachments/files/26233974/hindsight.2.pptx)
 
 ### Backend
 
