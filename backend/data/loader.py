@@ -65,14 +65,15 @@ def build_section_index() -> dict[str, LegalSection]:
     except Exception as e:
         logger.warning("Failed to load IPC sections: %s", e)
 
-    logger.info("Section index built: %d sections", len(index))
+    logger.debug("Section index built: %d sections", len(index))
     return index
 
 
-def build_keyword_index() -> dict[str, list[str]]:
+def build_keyword_index(section_index: dict[str, "LegalSection"] | None = None) -> dict[str, list[str]]:
     """Build a keyword -> list[section_id] reverse index."""
     keyword_index: dict[str, list[str]] = {}
-    section_index = build_section_index()
+    if section_index is None:
+        section_index = build_section_index()
 
     for sid, section in section_index.items():
         for kw in section.keywords:
@@ -82,7 +83,7 @@ def build_keyword_index() -> dict[str, list[str]]:
             if sid not in keyword_index[kw_lower]:
                 keyword_index[kw_lower].append(sid)
 
-    logger.info("Keyword index built: %d keywords", len(keyword_index))
+    logger.debug("Keyword index built: %d keywords", len(keyword_index))
     return keyword_index
 
 

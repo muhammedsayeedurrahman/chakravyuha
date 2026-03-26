@@ -5,13 +5,14 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Header } from "@/components/Header";
 import { HeroSection } from "@/components/HeroSection";
 import { StatsBar } from "@/components/StatsBar";
-import { FeatureGrid } from "@/components/FeatureGrid";
 import { DemoShowcase } from "@/components/DemoShowcase";
+import { LawSection } from "@/components/LawSection";
 import { GuidedStepsCard } from "@/components/GuidedStepsCard";
 import { BottomTabNav } from "@/components/BottomTabNav";
 import { ChatModal } from "@/components/ChatModal";
 import { Card } from "@/components/Card";
 import { ComplaintDraftCard } from "@/components/ComplaintDraftCard";
+import { OpenClawCard } from "@/components/OpenClawCard";
 import { Preloader } from "@/components/Preloader";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { CurtainTransition } from "@/components/CurtainTransition";
@@ -67,7 +68,12 @@ export default function HomeContent() {
       <Header />
 
       <main className="flex-1 max-w-3xl mx-auto w-full flex flex-col gap-8 py-6 relative z-10">
-        {activeTab === "draft" ? (
+        {activeTab === "file" ? (
+          /* ── File Tab (OpenClaw) ─────────────────────────────────── */
+          <ErrorBoundary>
+            <OpenClawCard />
+          </ErrorBoundary>
+        ) : activeTab === "draft" ? (
           /* ── Draft Tab ──────────────────────────────────────────── */
           <ErrorBoundary>
             <ComplaintDraftCard />
@@ -77,8 +83,12 @@ export default function HomeContent() {
           <>
             <HeroSection onStartChat={handleStartChat} />
             <StatsBar />
+            <LawSection
+              onOpenDraft={() => handleTabChange("draft")}
+              onOpenFile={() => handleTabChange("file")}
+              onAutoFlow={handleStartChat}
+            />
             <DemoShowcase />
-            <FeatureGrid />
 
             {/* Guided Steps */}
             <ErrorBoundary>

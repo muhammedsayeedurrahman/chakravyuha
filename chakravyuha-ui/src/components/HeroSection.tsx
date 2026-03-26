@@ -73,7 +73,7 @@ export function HeroSection({ onStartChat }: HeroSectionProps) {
               backgroundClip: "text",
             }}
           >
-            CHAKRAVYUHA
+            LEXARO
           </span>
           <span className="gradient-text-violet">.AI</span>
         </h1>
@@ -81,7 +81,7 @@ export function HeroSection({ onStartChat }: HeroSectionProps) {
           className="text-xs tracking-[0.3em] font-medium uppercase"
           style={{ color: "var(--color-secondary)" }}
         >
-          Indian Law | Artificial Intelligence
+          Legal Help. Simplified. Localized.
         </p>
       </motion.div>
 

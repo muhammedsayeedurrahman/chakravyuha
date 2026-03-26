@@ -50,12 +50,14 @@ interface ChatModalProps {
 
 // ── Fallback categories when classifier returns "unknown" ────────────────────
 const FALLBACK_CATEGORIES = [
-  { label: "Police Issue", query: "I need to file a police complaint" },
-  { label: "Document Lost", query: "I have lost my important documents" },
-  { label: "Family Problem", query: "I am facing domestic violence at home" },
-  { label: "Property Dispute", query: "I have a property dispute" },
-  { label: "Employment Issue", query: "My employer has not paid my salary" },
-  { label: "Consumer Complaint", query: "I bought a defective product and want a refund" },
+  { label: "Theft", query: "Someone stole my belongings, what are my legal options" },
+  { label: "Assault", query: "I was physically assaulted, what legal action can I take" },
+  { label: "Fraud", query: "I have been cheated in a financial fraud" },
+  { label: "Property", query: "I have a property dispute that needs legal resolution" },
+  { label: "Family", query: "I am facing domestic violence at home" },
+  { label: "Consumer", query: "I bought a defective product and want a refund" },
+  { label: "Employment", query: "My employer has not paid my salary" },
+  { label: "Emergency", query: "I need emergency legal help right now" },
 ];
 
 // ── Severity config ─────────────────────────────────────────────────────────
@@ -323,7 +325,7 @@ export function ChatModal({ open, onClose }: ChatModalProps) {
               <div className="flex items-center gap-2">
                 <Logo size={24} />
                 <h2 className="font-semibold text-sm" style={{ color: "var(--color-text)" }}>
-                  Chakravyuha
+                  Lexaro
                   <span className="gradient-text-violet text-xs font-normal ml-0.5">.AI</span>
                 </h2>
               </div>
@@ -362,7 +364,7 @@ export function ChatModal({ open, onClose }: ChatModalProps) {
                     >
                       {m.text}
                     </div>
-                  ) : m.smartData?.scenario === "unknown" ? (
+                  ) : m.smartData?.scenario === "unknown" || (m.smartData && !m.smartData.guidance) ? (
                     <CategoryPicker onSelect={send} disabled={isLoading} />
                   ) : m.smartData ? (
                     <ResponseCard data={m.smartData} />

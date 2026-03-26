@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Chakravyuha AI Logo — Ashoka-style wheel with balance scales center + AI circuit nodes.
+ * Lexaro AI Logo — Ashoka-style wheel with balance scales center + AI circuit nodes.
  * Judicial Amethyst theme: violet + rose-gold.
  */
 export function Logo({ size = 40, className = "" }: { size?: number; className?: string }) {
@@ -13,7 +13,7 @@ export function Logo({ size = 40, className = "" }: { size?: number; className?:
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      aria-label="Chakravyuha AI logo"
+      aria-label="Lexaro AI logo"
     >
       {/* Outer glow */}
       <defs>

@@ -16,13 +16,13 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Chakravyuha | AI Legal Assistant \u2014 22 Indian Languages",
+  title: "Lexaro | Legal Help. Simplified. Localized.",
   description:
-    "Voice-first, multilingual AI legal assistant for India. Get guidance on your legal rights in 22 Indian languages.",
-  keywords: ["legal assistant", "India", "AI", "multilingual", "voice", "BNS", "IPC"],
+    "Legal Help. Simplified. Localized. AI legal assistant for India in 22 Indian languages.",
+  keywords: ["legal assistant", "India", "AI", "multilingual", "voice", "BNS", "IPC", "Lexaro"],
   openGraph: {
-    title: "Chakravyuha | AI Legal Assistant",
-    description: "Voice-first multilingual AI legal assistant for India.",
+    title: "Lexaro | Legal Help. Simplified. Localized.",
+    description: "Legal Help. Simplified. Localized. AI legal assistant for India.",
     type: "website",
   },
 };

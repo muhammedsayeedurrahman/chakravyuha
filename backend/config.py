@@ -1,4 +1,4 @@
-"""Chakravyuha configuration — env vars, constants, and settings."""
+"""Lexaro configuration — env vars, constants, and settings."""
 
 from __future__ import annotations
 
@@ -75,16 +75,19 @@ CHILD_HELPLINE = "1098"
 
 # ── Legal Disclaimer ──────────────────────────────────────────────────────
 DISCLAIMER = (
-    "DISCLAIMER: Chakravyuha provides legal INFORMATION, not legal ADVICE. "
+    "DISCLAIMER: Lexaro provides legal INFORMATION, not legal ADVICE. "
     "This tool is for educational and informational purposes only. It does not "
     "constitute legal advice, and no attorney-client relationship is formed. "
     "Always consult a qualified lawyer for legal matters. "
     f"In emergencies, contact Police ({POLICE_HELPLINE}) or NALSA ({NALSA_HELPLINE})."
 )
 
+# ── Auto Mode ──────────────────────────────────────────────────────────────
+AUTO_MODE = os.getenv("AUTO_MODE", "true").lower() in ("true", "1", "yes")
+
 # ── Gradio Settings ────────────────────────────────────────────────────────
 GRADIO_PORT = int(os.getenv("GRADIO_PORT", "7860"))
-GRADIO_TITLE = "Chakravyuha — AI Legal Assistant for India"
+GRADIO_TITLE = "Lexaro — Legal Help. Simplified. Localized."
 
 
 # ── Settings Object ──────────────────────────────────────────────────────

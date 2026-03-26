@@ -23,9 +23,9 @@ class MistralProvider(BaseLLMProvider):
         self._model = settings.mistral_model
         self._available = bool(self._api_key)
         if self._available:
-            logger.info("Mistral provider ready (model: %s)", self._model)
+            logger.debug("Mistral provider ready (model: %s)", self._model)
         else:
-            logger.info("Mistral provider disabled — no MISTRAL_API_KEY")
+            logger.debug("Mistral provider disabled — no MISTRAL_API_KEY")
 
     @property
     def name(self) -> str:

@@ -11,8 +11,8 @@ const TABS = [
   { id: "home", icon: "\uD83C\uDFE0", label: "Home" },
   { id: "chat", icon: "\u2696\uFE0F", label: "Consult" },
   { id: "draft", icon: "\uD83D\uDCDD", label: "Draft" },
+  { id: "file", icon: "\uD83D\uDCC4", label: "File" },
   { id: "voice", icon: "\uD83C\uDFA4", label: "Voice" },
-  { id: "info", icon: "\uD83D\uDCDC", label: "Laws" },
 ];
 
 export function BottomTabNav({ onTabChange, activeTab }: BottomTabNavProps) {

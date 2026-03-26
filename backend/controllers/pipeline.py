@@ -170,20 +170,37 @@ def _rag_fallback(query: str, english_query: str | None = None) -> object:
                             top_score, _RAG_CONFIDENCE_THRESHOLD)
                 return _guided_fallback()
 
-            guidance_parts = []
             section_refs = []
+            law_lines = []
+            top_sec = results[0].section
             for r in results:
                 sec = r.section
                 section_refs.append(f"{sec.section_id} — {sec.title} ({sec.act})")
-                guidance_parts.append(
-                    f"{sec.section_id}: {sec.title}\n{sec.description}"
-                    + (f"\nPunishment: {sec.punishment}" if sec.punishment else "")
-                )
+                punishment = sec.punishment if sec.punishment else "Not specified"
+                law_lines.append(f"{sec.section_id} ({sec.act}): {sec.title} — Punishment: {punishment}")
+
+            # Determine bail/cognizable from top result
+            bail = "Bailable" if getattr(top_sec, "bailable", False) else "Non-bailable"
+            cog = "Cognizable" if getattr(top_sec, "cognizable", False) else "Non-cognizable"
+
+            # Structured guidance (Status / What to do / Law)
+            actions = []
+            if cog == "Cognizable":
+                actions.append("File an FIR at the nearest police station.")
+            else:
+                actions.append("File a complaint with a magistrate.")
+            actions.append("Contact NALSA (15100) for free legal aid.")
+
+            guidance = (
+                f"**Status**: {top_sec.title} ({cog}, {bail})\n\n"
+                f"**What to do**: {' '.join(actions)}\n\n"
+                f"**Law**: {'; '.join(law_lines)}"
+            )
 
             return SmartResponse(
                 scenario="rag_result",
                 title="Legal Sections Found",
-                guidance="\n\n".join(guidance_parts),
+                guidance=guidance,
                 sections=section_refs,
                 outcome="Please consult a qualified lawyer for specific legal advice on your situation.",
                 severity="medium",
@@ -196,15 +213,21 @@ def _rag_fallback(query: str, english_query: str | None = None) -> object:
 
 
 def _guided_fallback() -> object:
-    """Return a helpful fallback response when no match is found."""
+    """Return a helpful fallback response when no match is found.
+
+    Includes category selection so the user can self-route to the
+    correct legal domain. Categories trigger re-classification on the
+    frontend (VoiceCard / ChatModal send a specific query).
+    """
     from backend.routers.smart_legal import SmartResponse
 
     return SmartResponse(
         scenario="unknown",
-        title="Let Me Help You",
+        title="I Will Help You",
         guidance=(
-            "I'll help you with your legal issue.\n\n"
-            "Please choose a category below that best matches your situation, "
+            "I will help you. Please choose your issue:\n\n"
+            "**Categories**: Theft, Assault, Fraud, Property, Family, Consumer, Employment, Emergency\n\n"
+            "Select the category that best matches your situation, "
             "or describe your problem in more detail."
         ),
         sections=[],

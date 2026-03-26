@@ -23,9 +23,9 @@ class OpenRouterProvider(BaseLLMProvider):
         self._model = settings.openrouter_model
         self._available = bool(self._api_key)
         if self._available:
-            logger.info("OpenRouter provider ready (model: %s)", self._model)
+            logger.debug("OpenRouter provider ready (model: %s)", self._model)
         else:
-            logger.info("OpenRouter provider disabled — no OPENROUTER_API_KEY")
+            logger.debug("OpenRouter provider disabled — no OPENROUTER_API_KEY")
 
     @property
     def name(self) -> str:
@@ -56,8 +56,8 @@ class OpenRouterProvider(BaseLLMProvider):
                 headers={
                     "Authorization": f"Bearer {self._api_key}",
                     "Content-Type": "application/json",
-                    "HTTP-Referer": "https://github.com/chakravyuha",
-                    "X-Title": "Chakravyuha Legal AI",
+                    "HTTP-Referer": "https://github.com/lexaro",
+                    "X-Title": "Lexaro Legal AI",
                 },
                 timeout=60.0,
             )

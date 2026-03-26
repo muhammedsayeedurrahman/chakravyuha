@@ -34,7 +34,7 @@ class LegalService:
 
     def __init__(self) -> None:
         self._section_index = build_section_index()
-        self._keyword_index = build_keyword_index()
+        self._keyword_index = build_keyword_index(self._section_index)
         self._guided_tree = load_guided_tree()
         self._defence_strategies = load_defence_strategies()
         self._ipc_to_bns = load_ipc_to_bns_map()
@@ -239,7 +239,7 @@ class LegalService:
             )
             logger.info("RAG retriever initialized from %s", directory)
         except Exception as e:
-            logger.warning("RAG initialization failed (will use keyword search): %s", e)
+            logger.debug("RAG unavailable (keyword search active): %s", e)
             self._retriever = None
 
     def query_rag(self, text: str, top_k: int = 5) -> QueryResponse:

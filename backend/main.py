@@ -1,4 +1,4 @@
-"""Chakravyuha FastAPI backend — main application entry point."""
+"""Lexaro FastAPI backend — main application entry point."""
 
 from __future__ import annotations
 
@@ -25,28 +25,27 @@ logger = setup_logging()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize services on startup, clean up on shutdown."""
-    logger.info("Chakravyuha API starting up...")
+    logger.info("Lexaro API starting up...")
 
     # Pre-load legal data
     from backend.services.legal_service import get_legal_service
-    service = get_legal_service()
-    logger.info("Legal service loaded: %d sections", len(service._section_index))
+    get_legal_service()
 
-    # Try to initialize RAG (non-blocking)
+    # Try to initialize RAG (non-blocking — keyword search is the fallback)
     try:
-        service.init_rag()
+        get_legal_service().init_rag()
     except Exception as e:
-        logger.warning("RAG init skipped (will use keyword search): %s", e)
+        logger.debug("RAG unavailable, using keyword search: %s", e)
 
-    logger.info("Chakravyuha API ready!")
+    logger.info("Lexaro API ready!")
     yield
     # Shutdown — nothing to clean up currently
-    logger.info("Chakravyuha API shutting down.")
+    logger.info("Lexaro API shutting down.")
 
 
 # Create FastAPI app
 app = FastAPI(
-    title="Chakravyuha API",
+    title="Lexaro API",
     description="Voice-first, multilingual AI legal assistant for India",
     version="1.0.0",
     lifespan=lifespan,
@@ -70,29 +69,31 @@ app.add_exception_handler(Exception, generic_error_handler)
 # Request logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    """Log every request with method, path, and duration."""
+    """Log every request with method, path, and duration (skips /health)."""
     start = time.perf_counter()
     response = await call_next(request)
     duration = (time.perf_counter() - start) * 1000
-    logger.info(
-        "Request: %s %s → %d (%.1fms)",
-        request.method,
-        request.url.path,
-        response.status_code,
-        duration,
-        extra={
-            "method": request.method,
-            "path": str(request.url.path),
-            "status_code": response.status_code,
-            "duration_ms": round(duration, 1),
-        },
-    )
+    # Skip noisy health-check polls
+    if request.url.path not in ("/health", "/favicon.ico"):
+        logger.info(
+            "%s %s → %d (%.1fms)",
+            request.method,
+            request.url.path,
+            response.status_code,
+            duration,
+            extra={
+                "method": request.method,
+                "path": str(request.url.path),
+                "status_code": response.status_code,
+                "duration_ms": round(duration, 1),
+            },
+        )
     return response
 
 
 # Mount routers
 from backend.routers import legal_query as legal_query_router
-from backend.routers import nyaya, documents, judge, smart_legal
+from backend.routers import nyaya, documents, judge, smart_legal, openclaw
 
 app.include_router(smart_legal.router)  # Classification-first pipeline (primary)
 app.include_router(legal_query_router.router)
@@ -104,6 +105,7 @@ app.include_router(guided.router)
 app.include_router(voice.router)
 app.include_router(cases.router)
 app.include_router(forms.router)
+app.include_router(openclaw.router)
 
 
 @app.get("/")
@@ -111,7 +113,7 @@ async def root() -> dict:
     """Health check and API info."""
     settings = get_settings()
     return {
-        "name": "Chakravyuha API",
+        "name": "Lexaro API",
         "version": "1.0.0",
         "description": "AI Legal Assistant for India",
         "disclaimer": settings.disclaimer_text,
@@ -124,6 +126,7 @@ async def root() -> dict:
             "voice": "POST /api/voice (legacy)",
             "cases": "GET/POST /api/cases",
             "forms": "GET /api/form/portals, POST /api/form/start",
+            "openclaw": "GET /api/openclaw/portals, POST /api/openclaw/file, GET /api/openclaw/status/{id}, POST /api/openclaw/otp",
             "nyaya": "POST /api/nyaya/query, GET /api/nyaya/statute/{code}, POST /api/nyaya/extract-entities",
         },
     }

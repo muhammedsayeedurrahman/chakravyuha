@@ -164,8 +164,10 @@ class LegalRAG:
         """
         if not sections:
             return (
-                "I could not find relevant legal sections for your query. "
-                f"Please try rephrasing or contact NALSA ({NALSA_HELPLINE}) for help.\n\n"
+                "**Status**: No matching legal sections found.\n\n"
+                "**What to do**: Please describe your issue in more detail, "
+                f"or contact NALSA ({NALSA_HELPLINE}) for free legal aid.\n\n"
+                "**Law**: Unable to determine applicable sections.\n\n"
                 f"{DISCLAIMER}"
             )
 
@@ -183,11 +185,25 @@ class LegalRAG:
             except Exception as e:
                 logger.warning("LLM generation failed, falling back to template: %s", e)
 
-        # Template fallback
-        return self._template_response(query, sections)
+        # Template fallback (structured format)
+        try:
+            return self._template_response(query, sections)
+        except Exception as e:
+            logger.error("Template response failed: %s — using emergency fallback", e)
+            # Emergency fallback when both LLM and template fail
+            return (
+                "**Status**: Your legal issue has been noted.\n\n"
+                "**What to do**: Please choose a category: "
+                "Theft, Assault, Fraud, Property, Family, Consumer, Employment, Emergency. "
+                f"Or contact NALSA ({NALSA_HELPLINE}) for free legal aid.\n\n"
+                "**Law**: Please provide more details for specific legal sections.\n\n"
+                f"{DISCLAIMER}"
+            )
 
     def _template_response(self, query: str, sections: list[dict]) -> str:
-        """Format retrieved sections into a template-based response (fallback).
+        """Format retrieved sections into a structured template response (fallback).
+
+        Uses Status / What to do / Law format for zero-hallucination output.
 
         Args:
             query: Original user query.
@@ -196,22 +212,40 @@ class LegalRAG:
         Returns:
             Formatted response string.
         """
-        lines = [f"Based on your query: \"{query}\"\n"]
-        lines.append("**Relevant Legal Sections:**\n")
+        top = sections[0] if sections else {}
+        bail_status = "Bailable" if top.get("bailable") else "Non-bailable"
+        cog_status = "Cognizable" if top.get("cognizable") else "Non-cognizable"
 
-        for i, s in enumerate(sections, 1):
-            law_label = "BNS (2023)" if s.get("law") == "BNS" else "IPC (1860)"
-            lines.append(f"**{i}. {s['section_id']} — {s['title']}** ({law_label})")
-            lines.append(f"   {s['description'][:200]}...")
-            lines.append(f"   Punishment: {s['punishment']}")
-            bail_status = "Bailable" if s.get("bailable") else "Non-bailable"
-            cog_status = "Cognizable" if s.get("cognizable") else "Non-cognizable"
-            lines.append(f"   Status: {cog_status}, {bail_status}")
-            lines.append(f"   Confidence: {s['score']:.0%}")
-            lines.append("")
+        # Status line
+        status = top.get("title", "Legal issue identified")
 
-        lines.append(f"\n{DISCLAIMER}")
-        return "\n".join(lines)
+        # What to do
+        actions = []
+        if cog_status == "Cognizable":
+            actions.append("File an FIR at the nearest police station — police must register it.")
+        else:
+            actions.append("File a complaint with a magistrate under CrPC Section 200.")
+        if bail_status == "Non-bailable":
+            actions.append("Consult a lawyer immediately for bail application.")
+        else:
+            actions.append("Bail is available as a matter of right.")
+        actions.append(f"Contact NALSA ({NALSA_HELPLINE}) for free legal aid.")
+
+        # Law lines
+        law_lines = []
+        for s in sections:
+            law_label = "BNS 2023" if s.get("law") == "BNS" else "IPC 1860"
+            punishment = s.get("punishment", "Not specified")
+            law_lines.append(f"{s['section_id']} ({law_label}): {s['title']} — Punishment: {punishment}")
+
+        parts = [
+            f"**Status**: {status} ({cog_status}, {bail_status})",
+            f"**What to do**: " + " ".join(actions),
+            f"**Law**: " + "; ".join(law_lines),
+        ]
+
+        parts.append(f"\n{DISCLAIMER}")
+        return "\n\n".join(parts)
 
 
 # Module-level singleton

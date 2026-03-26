@@ -19,7 +19,7 @@ from backend.agent.intent_classifier import (
     classify_intent,
 )
 from backend.agent.retrieval_agent import RetrievalAgent
-from backend.config import DISCLAIMER, NALSA_HELPLINE
+from backend.config import AUTO_MODE, DISCLAIMER, NALSA_HELPLINE
 from backend.legal.defence import DefenceAdvisor
 from backend.legal.guided_flow import GuidedFlow
 from backend.legal.rag import LegalRAG
@@ -140,7 +140,7 @@ class Orchestrator:
         self, text: str, language: str, session_state: dict
     ) -> dict:
         greeting = (
-            "Namaste! I'm Chakravyuha, your AI legal assistant for India. "
+            "Namaste! I'm Lexaro, your AI legal assistant for India. "
             "Ask me about any legal question -- criminal law sections, punishments, "
             "or your rights. You can also try the **Guided Legal Help** tab for "
             "step-by-step guidance."
@@ -304,6 +304,75 @@ class Orchestrator:
             )
 
         return self._build_response(response, sections, language, session_state, text)
+
+    # ------------------------------------------------------------------
+    # Auto flow (autonomous agent)
+    # ------------------------------------------------------------------
+
+    def handle_auto_flow(
+        self, narrative: str, language: str = "en-IN", user_data: dict | None = None,
+    ) -> dict:
+        """Autonomous flow: classify → extract → draft → identify missing fields.
+
+        When AUTO_MODE is enabled and intent is COMPLAINT_DRAFT, this
+        replaces manual step selection with an end-to-end pipeline.
+
+        Args:
+            narrative: User's description of their legal issue.
+            language: Language code.
+            user_data: Optional pre-filled user data (name, phone, etc.).
+
+        Returns:
+            Dict with draft, missing_fields, filing_option, sections.
+        """
+        if not AUTO_MODE:
+            return {
+                "status": "disabled",
+                "message": "Auto mode is disabled. Use manual flow.",
+            }
+
+        # Step 1: Draft complaint from narrative
+        result = self._complaint_agent.auto_draft(
+            narrative=narrative,
+            language=language,
+        )
+
+        if result.status == "error":
+            return {
+                "status": "error",
+                "message": "Could not extract enough details from your description.",
+                "missing_fields": ["incident_details", "date", "location"],
+                "draft": None,
+                "filing_option": False,
+            }
+
+        # Step 2: Identify missing fields
+        extracted = result.extracted_info
+        missing = list(result.missing_fields) if result.missing_fields else []
+
+        # Step 3: Merge user_data if provided
+        if user_data and missing:
+            filled = [f for f in missing if user_data.get(f)]
+            missing = [f for f in missing if f not in filled]
+
+        # Step 4: Build response
+        sections = []
+        if extracted:
+            for bns_code in extracted.bns_sections:
+                sections.append({"section_id": bns_code, "law": "BNS"})
+
+        return {
+            "status": "success",
+            "draft": result.content,
+            "document_type": result.document_type,
+            "sections": sections,
+            "applicable_sections": result.applicable_sections or [],
+            "missing_fields": missing,
+            "filing_option": len(missing) == 0,
+            "offense": extracted.offense if extracted else "unknown",
+            "jurisdiction": extracted.jurisdiction if extracted else "unknown",
+            "strategy_summary": result.strategy_summary,
+        }
 
     # ------------------------------------------------------------------
     # Response builder

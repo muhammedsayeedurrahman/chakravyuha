@@ -1,10 +1,11 @@
-"""Chakravyuha — AI Legal Assistant for India (Gradio App)."""
+"""Lexaro — Legal Help. Simplified. Localized. (Gradio App)."""
 
 import gradio as gr
 from backend.config import DISCLAIMER, GRADIO_PORT, GRADIO_TITLE, SUPPORTED_LANGUAGES
 from backend.agent.orchestrator import Orchestrator
 from backend.agent.form_filler import get_supported_portals
 from backend.agent.escalation import get_escalation_info
+from backend.agent.openclaw.orchestrator import get_openclaw
 
 orchestrator = Orchestrator()
 
@@ -201,16 +202,131 @@ def guided_free_text(text, guided_state, session_state):
     return result["text_response"], result["session_state"]
 
 
-# ── Tab 3: Form Filing Agent ──────────────────────────────────────────────
+# ── Tab 3: OpenClaw Form Filing Agent ─────────────────────────────────────
+
+_openclaw = get_openclaw()
+
+# Portal ID mapping for dropdown
+_PORTAL_CHOICES = {
+    "CPGRAMS (Public Grievance)": "cpgrams",
+    "National Consumer Helpline": "consumer_helpline",
+    "eCourts eFiling": "ecourts",
+    "mParivahan / Sarathi": "mparivahan",
+}
+
+INDIAN_STATES = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
+    "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram",
+    "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
+    "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+    "Delhi", "Jammu and Kashmir", "Ladakh", "Chandigarh", "Puducherry",
+]
+
 
 def list_portals():
     """Return formatted list of supported portals."""
-    portals = get_supported_portals()
-    text = "### Supported Government Portals\n\n"
+    portals = _openclaw.list_portals()
+    text = "### Supported Government Portals (OpenClaw Autonomous Filing)\n\n"
     for p in portals:
         text += f"**{p['name']}** — [{p['url']}]({p['url']})\n"
-        text += f"Forms: {', '.join(p['forms'])}\n\n"
+        text += f"Required fields: {', '.join(p['required_fields'])}\n\n"
     return text
+
+
+async def start_openclaw_filing(
+    portal_name, name, mobile, email, state, district, pin_code,
+    gender, father_name, dob, description, documents, session_state,
+):
+    """Start autonomous form filing via OpenClaw."""
+    if session_state is None:
+        session_state = new_session()
+
+    portal_id = _PORTAL_CHOICES.get(portal_name)
+    if not portal_id:
+        return "Please select a portal.", gr.update(visible=False), session_state
+
+    user_data = {
+        "name": name or "",
+        "mobile": mobile or "",
+        "email": email or "",
+        "state": state or "",
+        "district": district or "",
+        "pin_code": pin_code or "",
+        "gender": gender or "",
+        "father_name": father_name or "",
+        "dob": dob or "",
+        "description": description or "",
+        "subject": (description or "")[:100],
+        "address": f"{district}, {state} - {pin_code}",
+    }
+
+    # Validate
+    missing = _openclaw.validate_request(portal_id, user_data)
+    if missing:
+        return (
+            f"Missing required fields: **{', '.join(missing)}**\n\nPlease fill all required fields.",
+            gr.update(visible=False),
+            session_state,
+        )
+
+    # Collect document paths
+    doc_paths = []
+    if documents:
+        for doc in documents:
+            if hasattr(doc, "name"):
+                doc_paths.append(doc.name)
+            elif isinstance(doc, str):
+                doc_paths.append(doc)
+
+    progress_log = []
+
+    def on_progress(msg):
+        progress_log.append(msg)
+
+    # Run the filing
+    result = await _openclaw.file_form(
+        portal_id=portal_id,
+        user_data=user_data,
+        documents=doc_paths,
+        on_progress=on_progress,
+    )
+
+    # Build result display
+    steps_text = "\n".join(f"- {s}" for s in result.steps_completed)
+    output = f"## Filing Result: {result.status.value.upper()}\n\n"
+
+    if result.reference_number:
+        output += f"### Reference Number: `{result.reference_number}`\n\n"
+
+    output += f"**Portal:** {portal_name}\n"
+    output += f"**Message:** {result.message}\n\n"
+
+    if steps_text:
+        output += f"### Steps Completed\n{steps_text}\n\n"
+
+    if result.error:
+        output += f"### Error\n{result.error}\n\n"
+
+    # Show OTP section if waiting
+    show_otp = _openclaw.otp_gate.is_waiting(session_state.get("openclaw_session", ""))
+
+    return output, gr.update(visible=show_otp), session_state
+
+
+def submit_otp_callback(otp_value, session_state):
+    """Handle OTP submission from the UI."""
+    if session_state is None:
+        session_state = new_session()
+
+    session_id = session_state.get("openclaw_session", "")
+    if not session_id or not otp_value:
+        return "No pending OTP request.", session_state
+
+    success = _openclaw.otp_gate.submit_otp(session_id, otp_value.strip())
+    if success:
+        return "OTP submitted. The agent is continuing...", session_state
+    return "No pending OTP request for this session.", session_state
 
 
 # ── Tab 4: Case Tracker ──────────────────────────────────────────────────
@@ -349,27 +465,84 @@ def build_app():
                     [guided_output, guided_radio, guided_state, session_state, guided_free_input],
                 )
 
-            # ── Tab 3: Form Filing Agent ──
-            with gr.Tab("Form Filing Agent"):
-                gr.Markdown("### Government Portal Form Automation")
+            # ── Tab 3: OpenClaw Autonomous Form Filing ──
+            with gr.Tab("OpenClaw Form Agent"):
+                gr.Markdown("### Autonomous Government Portal Filing (OpenClaw)")
+                gr.Markdown(
+                    "> **How it works:** Select a portal, fill your details, and click Start. "
+                    "The AI agent will open a browser, fill the form, solve CAPTCHAs automatically, "
+                    "and pause for OTP when needed. You'll get a reference number at the end."
+                )
                 gr.Markdown(list_portals())
 
-                gr.Markdown("**Demo Mode:** Select a portal and enter your details below.")
                 with gr.Row():
                     portal_select = gr.Dropdown(
-                        choices=["Parivahan (Transport)", "eCourts", "NALSA Legal Aid"],
+                        choices=list(_PORTAL_CHOICES.keys()),
                         label="Select Portal",
+                        scale=2,
                     )
-                with gr.Row():
-                    name_input = gr.Textbox(label="Full Name")
-                    state_input = gr.Textbox(label="State")
-                with gr.Row():
-                    form_btn = gr.Button("Start Form Filling", variant="primary")
-                form_output = gr.Markdown("Select a portal and click Start.")
+                    gender_input = gr.Dropdown(
+                        choices=["Male", "Female", "Other"],
+                        label="Gender",
+                        scale=1,
+                    )
 
-                gr.Markdown(
-                    "> **Note:** The form filling agent will open a browser window. "
-                    "You will need to complete CAPTCHA/OTP manually."
+                with gr.Row():
+                    oc_name = gr.Textbox(label="Full Name", placeholder="Enter your full name")
+                    oc_father = gr.Textbox(label="Father's Name", placeholder="(Required for Parivahan)")
+                    oc_dob = gr.Textbox(label="Date of Birth", placeholder="DD/MM/YYYY")
+
+                with gr.Row():
+                    oc_mobile = gr.Textbox(label="Mobile Number", placeholder="10-digit mobile")
+                    oc_email = gr.Textbox(label="Email", placeholder="your@email.com")
+                    oc_pin = gr.Textbox(label="PIN Code", placeholder="6-digit PIN")
+
+                with gr.Row():
+                    oc_state = gr.Dropdown(choices=INDIAN_STATES, label="State")
+                    oc_district = gr.Textbox(label="District", placeholder="Your district")
+
+                oc_description = gr.Textbox(
+                    label="Grievance / Complaint / Case Description",
+                    placeholder="Describe your issue in detail (max 4000 characters)...",
+                    lines=4,
+                )
+
+                oc_documents = gr.File(
+                    label="Upload Documents (PDF, JPG, PNG)",
+                    file_count="multiple",
+                    file_types=[".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx"],
+                )
+
+                with gr.Row():
+                    oc_start_btn = gr.Button("Start Autonomous Filing", variant="primary", scale=2)
+                    oc_stop_btn = gr.Button("Cancel", variant="stop", scale=1)
+
+                oc_output = gr.Markdown("Select a portal, fill your details, and click **Start Autonomous Filing**.")
+
+                # OTP Section (hidden until needed)
+                with gr.Group(visible=False) as otp_group:
+                    gr.Markdown("### OTP Required")
+                    gr.Markdown("An OTP has been sent to your registered mobile/email. Enter it below:")
+                    with gr.Row():
+                        oc_otp_input = gr.Textbox(label="Enter OTP", placeholder="6-digit OTP", scale=3)
+                        oc_otp_btn = gr.Button("Submit OTP", variant="secondary", scale=1)
+                    oc_otp_status = gr.Markdown("")
+
+                # Wire up events
+                oc_start_btn.click(
+                    start_openclaw_filing,
+                    inputs=[
+                        portal_select, oc_name, oc_mobile, oc_email, oc_state,
+                        oc_district, oc_pin, gender_input, oc_father, oc_dob,
+                        oc_description, oc_documents, session_state,
+                    ],
+                    outputs=[oc_output, otp_group, session_state],
+                )
+
+                oc_otp_btn.click(
+                    submit_otp_callback,
+                    inputs=[oc_otp_input, session_state],
+                    outputs=[oc_otp_status, session_state],
                 )
 
             # ── Tab 4: Case Tracker ──

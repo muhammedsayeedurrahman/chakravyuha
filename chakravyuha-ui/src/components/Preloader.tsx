@@ -48,10 +48,10 @@ export function Preloader({ onComplete }: PreloaderProps) {
               className="text-2xl font-bold gradient-text-hero"
               style={{ fontFamily: "var(--font-playfair)" }}
             >
-              CHAKRAVYUHA.AI
+              LEXARO.AI
             </h1>
             <p className="text-xs tracking-[0.2em] mt-1" style={{ color: "var(--color-text-faint)" }}>
-              INDIAN LAW | ARTIFICIAL INTELLIGENCE
+              LEGAL HELP. SIMPLIFIED. LOCALIZED.
             </p>
           </motion.div>
 

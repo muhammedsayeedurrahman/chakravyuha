@@ -24,9 +24,9 @@ class GeminiProvider(BaseLLMProvider):
         self._model = settings.gemini_model
         self._available = bool(self._api_key)
         if self._available:
-            logger.info("Gemini provider ready (model: %s)", self._model)
+            logger.debug("Gemini provider ready (model: %s)", self._model)
         else:
-            logger.info("Gemini provider disabled — no GEMINI_API_KEY")
+            logger.debug("Gemini provider disabled — no GEMINI_API_KEY")
 
     @property
     def name(self) -> str:

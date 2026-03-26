@@ -116,6 +116,30 @@ async def smart_voice(
     )
 
 
+class AutoFlowRequest(BaseModel):
+    narrative: str = Field(..., description="User's description of their legal issue")
+    language: str = Field(default="en-IN")
+    user_data: dict = Field(default_factory=dict, description="Optional pre-filled user data")
+
+
+@router.post("/auto-flow")
+async def auto_flow(request: AutoFlowRequest) -> dict:
+    """Autonomous legal agent — narrative in, draft + guidance out.
+
+    Minimal user interaction: system classifies, extracts entities,
+    drafts documents, and identifies missing fields automatically.
+    """
+    from backend.agent.orchestrator import Orchestrator
+
+    orchestrator = Orchestrator()
+    result = orchestrator.handle_auto_flow(
+        narrative=request.narrative,
+        language=request.language,
+        user_data=request.user_data,
+    )
+    return result
+
+
 @router.get("/scenarios")
 async def list_scenarios() -> dict:
     """List all known legal scenarios for the frontend."""
@@ -200,7 +224,7 @@ async def pipeline_health() -> dict:
         translation_available = False
 
     return {
-        "pipeline": "8-layer Chakravyuha",
+        "pipeline": "8-layer Lexaro",
         "layers": [
             {"L1": "Input Validation", "type": "local"},
             {"L2": "Language Detection", "type": "local", "detail": "script-based, no API"},

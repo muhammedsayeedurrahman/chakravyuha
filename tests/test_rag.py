@@ -64,11 +64,12 @@ class TestLegalRAG:
         sections = rag.retrieve_sections("theft")
         response = rag.generate_response("theft", sections)
         assert isinstance(response, str)
-        assert "DISCLAIMER" in response or "legal" in response.lower()
+        lower = response.lower()
+        assert "DISCLAIMER" in response or "legal" in lower or "lawyer" in lower or "consult" in lower
 
     def test_generate_response_empty_sections(self, rag):
         response = rag.generate_response("test", [])
-        assert "could not find" in response.lower() or "NALSA" in response
+        assert "NALSA" in response or "no matching" in response.lower() or "could not find" in response.lower()
 
     @pytest.mark.skipif(
         not LegalRAG().is_ready,

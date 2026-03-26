@@ -72,20 +72,22 @@ class LegalLLM:
         self._providers_by_name: dict[str, BaseLLMProvider] = {}
         self._active_provider: BaseLLMProvider | None = None
 
-        logger.info("LLM Q&A priority: %s", " -> ".join(priority))
+        logger.debug("LLM Q&A priority: %s", " -> ".join(priority))
 
         for name in priority:
             provider = _create_provider(name)
             if provider and provider.is_available:
                 self._providers.append(provider)
                 self._providers_by_name[provider.name] = provider
-                logger.info("  [OK] %s — available", provider.name)
+                logger.debug("  [OK] %s — available", provider.name)
             else:
-                logger.info("  [--] %s — unavailable", name)
+                logger.debug("  [--] %s — unavailable", name)
 
         if self._providers:
             self._active_provider = self._providers[0]
-            logger.info("Primary LLM provider: %s", self._active_provider.name)
+            logger.info("LLM ready: primary=%s, available=%s",
+                        self._active_provider.name,
+                        ", ".join(p.name for p in self._providers))
         else:
             logger.warning("No LLM providers available — will use template fallback")
 
@@ -108,7 +110,7 @@ class LegalLLM:
             if provider:
                 chain.append(provider)
         if chain:
-            logger.info(
+            logger.debug(
                 "Doc-gen priority (PII-safe): %s",
                 " -> ".join(p.name for p in chain),
             )
@@ -271,8 +273,8 @@ def _call_provider_raw(
             headers={
                 "Authorization": f"Bearer {provider._api_key}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://github.com/chakravyuha",
-                "X-Title": "Chakravyuha Legal AI",
+                "HTTP-Referer": "https://github.com/lexaro",
+                "X-Title": "Lexaro Legal AI",
             },
             timeout=90.0,
         )

@@ -288,6 +288,85 @@ export async function nextGuidedStep(
   return res.json();
 }
 
+// ── OpenClaw (Autonomous Form Filing) Types ──────────────────────────────────
+
+export interface OpenClawPortal {
+  id: string;
+  name: string;
+  url: string;
+  description: string;
+  required_fields: string[];
+}
+
+export interface OpenClawFilingRequest {
+  portal_id: string;
+  user_data: Record<string, string>;
+  documents?: string[];
+}
+
+export interface OpenClawFilingResponse {
+  session_id: string | null;
+  portal_id: string;
+  status: string;
+  message: string;
+  current_step: string;
+  steps_completed: string[];
+  reference_number: string | null;
+  error: string | null;
+  next_actions: string[];
+}
+
+// ── OpenClaw API Functions ───────────────────────────────────────────────────
+
+export async function getOpenClawPortals(): Promise<OpenClawPortal[]> {
+  const res = await fetch("/api/openclaw/portals");
+  if (!res.ok) {
+    throw new Error(`Failed to fetch portals: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function startOpenClawFiling(
+  request: OpenClawFilingRequest
+): Promise<OpenClawFilingResponse> {
+  const res = await fetch("/api/openclaw/file", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail ?? `OpenClaw filing error ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function pollOpenClawStatus(
+  sessionId: string
+): Promise<OpenClawFilingResponse> {
+  const res = await fetch(`/api/openclaw/status/${sessionId}`);
+  if (!res.ok) {
+    throw new Error(`Status poll failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function submitOpenClawOTP(
+  sessionId: string,
+  otp: string
+): Promise<{ success: boolean; message: string; next_actions: string[] }> {
+  const res = await fetch("/api/openclaw/otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: sessionId, otp }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail ?? `OTP submit error ${res.status}`);
+  }
+  return res.json();
+}
+
 // ── Auto-Draft (Agentic Complaint Drafting) ─────────────────────────────────
 
 export async function autoDraft(

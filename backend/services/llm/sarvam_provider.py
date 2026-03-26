@@ -18,16 +18,16 @@ class SarvamProvider(BaseLLMProvider):
         self._available = False
         settings = get_settings()
         if not settings.sarvam_api_key:
-            logger.info("Sarvam LLM provider disabled — no SARVAM_API_KEY")
+            logger.debug("Sarvam LLM provider disabled — no SARVAM_API_KEY")
             return
         try:
             from sarvamai import SarvamAI
 
             self._client = SarvamAI(api_subscription_key=settings.sarvam_api_key)
             self._available = True
-            logger.info("Sarvam LLM provider ready (model: %s)", settings.sarvam_llm_model)
+            logger.debug("Sarvam LLM provider ready (model: %s)", settings.sarvam_llm_model)
         except ImportError:
-            logger.info("Sarvam provider disabled — sarvamai not installed")
+            logger.debug("Sarvam provider disabled — sarvamai not installed")
         except Exception as e:
             logger.info("Sarvam init failed: %s", e)
 

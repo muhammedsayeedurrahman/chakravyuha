@@ -20,8 +20,8 @@ env/
 # ChromaDB vector store
 chromadb_index/
 
-# Model cache
-models/
+# Model weight cache (ML models, not Python packages)
+/models/
 *.pt
 *.bin
 *.safetensors

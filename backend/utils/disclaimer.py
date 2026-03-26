@@ -1,11 +1,11 @@
-"""Legal disclaimer utilities for Chakravyuha."""
+"""Legal disclaimer utilities for Lexaro."""
 
 from __future__ import annotations
 
 from backend.config import get_settings
 
 DISCLAIMER_BANNER = (
-    "⚖️ **LEGAL DISCLAIMER**: Chakravyuha provides legal INFORMATION, not legal ADVICE. "
+    "⚖️ **LEGAL DISCLAIMER**: Lexaro provides legal INFORMATION, not legal ADVICE. "
     "This tool is for educational and informational purposes only. It does not "
     "constitute legal advice, and no attorney-client relationship is formed. "
     "Always consult a qualified lawyer for legal matters. "

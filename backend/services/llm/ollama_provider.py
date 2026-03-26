@@ -25,11 +25,11 @@ class OllamaProvider(BaseLLMProvider):
     def _check_connection(self) -> None:
         """Verify Ollama server is reachable."""
         try:
-            resp = httpx.get(f"{self._base_url}/api/tags", timeout=5.0)
+            resp = httpx.get(f"{self._base_url}/api/tags", timeout=2.0)
             if resp.status_code == 200:
                 models = [m["name"] for m in resp.json().get("models", [])]
                 self._available = True
-                logger.info(
+                logger.debug(
                     "Ollama connected at %s — models: %s",
                     self._base_url,
                     ", ".join(models) if models else "(none)",
@@ -41,9 +41,9 @@ class OllamaProvider(BaseLLMProvider):
                         self._model, ", ".join(models), self._model,
                     )
         except httpx.ConnectError:
-            logger.info("Ollama not reachable at %s", self._base_url)
+            logger.debug("Ollama not reachable at %s", self._base_url)
         except Exception as e:
-            logger.info("Ollama check failed: %s", e)
+            logger.debug("Ollama check failed: %s", e)
 
     @property
     def name(self) -> str:

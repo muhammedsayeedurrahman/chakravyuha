@@ -57,11 +57,11 @@ export function Header() {
             className="text-base font-bold leading-tight tracking-tight"
             style={{ color: "var(--color-text)", fontFamily: "var(--font-playfair)" }}
           >
-            CHAKRAVYUHA
+            LEXARO
             <span className="gradient-text-violet text-xs font-normal ml-0.5">.AI</span>
           </h1>
           <p className="text-[9px] leading-none tracking-wider uppercase" style={{ color: "var(--color-text-faint)" }}>
-            Indian Law | Artificial Intelligence
+            Legal Help. Simplified. Localized.
           </p>
         </div>
       </div>
