@@ -159,6 +159,12 @@ async def translate_smart_response(
             helplines=translated_helplines,
             source=response.source,
             response_language=target_lang,
+            intent=response.intent,
+            workflow=response.workflow,
+            domain=response.domain,
+            handoff=response.handoff,
+            routing_confidence=response.routing_confidence,
+            automatic_handoff=response.automatic_handoff,
         )
     except Exception as e:
         logger.warning("Response translation failed: %s", e)

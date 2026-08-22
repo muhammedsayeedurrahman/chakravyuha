@@ -13,6 +13,12 @@ from __future__ import annotations
 import logging
 
 from backend.agent.escalation import check_escalation_needed
+from backend.agent.intent_classifier import (
+    IntentResult,
+    civic_handoff_for,
+    classify_intent,
+    is_automatic_civic_handoff,
+)
 from backend.services.cache import PipelineCache
 from backend.services.classifier import (
     ClassifyResult,
@@ -51,7 +57,12 @@ def _validate_input(text: str) -> str:
 
 # ── Layer 3: Intent Classification ───────────────────────────────────────────
 
-async def _classify(text: str, detected_lang: str) -> tuple[ClassifyResult, str]:
+async def _classify(
+    text: str,
+    detected_lang: str,
+    *,
+    translated_text: str | None = None,
+) -> tuple[ClassifyResult, str]:
     """Rule-based -> translate -> LLM fallback classification.
 
     Returns (ClassifyResult, english_text) so downstream layers can use
@@ -63,9 +74,10 @@ async def _classify(text: str, detected_lang: str) -> tuple[ClassifyResult, str]
         return result, text
 
     # If non-English, translate to English and retry rules
-    english_text = text
+    english_text = translated_text or text
     if detected_lang != "en-IN":
-        english_text = await translate_to_english(text, source_lang=detected_lang)
+        if translated_text is None:
+            english_text = await translate_to_english(text, source_lang=detected_lang)
         if english_text != text:
             result = classify(english_text)
             if result.scenario not in ("unknown", "empty"):
@@ -259,9 +271,48 @@ def _build_response(retrieval: dict) -> object:
             helplines=response.helplines or ["112 (Emergency)", "15100 (NALSA)"],
             source=response.source,
             response_language=response.response_language,
+            intent=response.intent,
+            workflow=response.workflow,
+            domain=response.domain,
+            handoff=response.handoff,
+            routing_confidence=response.routing_confidence,
+            automatic_handoff=response.automatic_handoff,
         )
 
     return response
+
+
+def _build_intent_handoff_response(intent: IntentResult, handoff: dict) -> object:
+    """Return a workflow hand-off without touching criminal retrieval."""
+
+    from backend.routers.smart_legal import SmartResponse
+
+    titles = {
+        "rti": "Public-records request identified",
+        "cpgrams": "Government service grievance identified",
+        "scheme_eligibility": "Scheme eligibility request identified",
+        "rights_guidance": "Rights guidance request identified",
+    }
+    workflow = handoff["workflow"]
+    return SmartResponse(
+        scenario=workflow,
+        title=titles.get(workflow, "Civic workflow identified"),
+        guidance=handoff["message"],
+        sections=[],
+        outcome="Continue to the matched guided workflow; no criminal-law section was inferred.",
+        severity="low",
+        source="intent_router",
+        intent=intent.intent,
+        workflow=workflow,
+        domain=handoff.get("domain"),
+        routing_confidence=intent.confidence,
+        automatic_handoff=is_automatic_civic_handoff(intent, handoff),
+        handoff={
+            key: value
+            for key, value in handoff.items()
+            if key in {"journey", "workflow", "handler", "intent", "domain"}
+        },
+    )
 
 
 # ── Main Pipeline ────────────────────────────────────────────────────────────
@@ -302,8 +353,29 @@ async def process_query(query: str, language: str = "en-IN") -> object:
     if cached:
         return cached
 
-    # L3: Classify (rules -> translate -> LLM)
-    result, english_text = await _classify(clean_text, detected_lang)
+    # L3a: Translate once when needed, then run the shared top-level router
+    # before every scenario/topic classifier and retriever.
+    routing_text = clean_text
+    if detected_lang != "en-IN":
+        routing_text = await translate_to_english(
+            clean_text,
+            source_lang=detected_lang,
+        )
+    top_intent = classify_intent(routing_text, allow_llm_fallback=False)
+    handoff = civic_handoff_for(top_intent)
+    if handoff is not None:
+        smart_resp = _build_intent_handoff_response(top_intent, handoff)
+        if detected_lang != "en-IN":
+            smart_resp = await translate_smart_response(smart_resp, detected_lang)
+        _cache.put(clean_text, detected_lang, smart_resp)
+        return smart_resp
+
+    # L3b: Existing domain/scenario classification (rules -> translate -> LLM)
+    result, english_text = await _classify(
+        clean_text,
+        detected_lang,
+        translated_text=routing_text,
+    )
     logger.info(
         "Pipeline: '%s' [%s] -> scenario=%s confidence=%.2f method=%s",
         clean_text[:50], detected_lang, result.scenario, result.confidence, result.method,
@@ -317,6 +389,15 @@ async def process_query(query: str, language: str = "en-IN") -> object:
 
     # L6: Build response
     smart_resp = _build_response(retrieval)
+    smart_resp = smart_resp.model_copy(
+        update={
+            "intent": top_intent.intent,
+            "workflow": top_intent.entities.get("workflow"),
+            "domain": top_intent.entities.get("domain"),
+            "routing_confidence": top_intent.confidence,
+            "automatic_handoff": False,
+        }
+    )
 
     # L7: Translate to user's language
     if detected_lang != "en-IN":

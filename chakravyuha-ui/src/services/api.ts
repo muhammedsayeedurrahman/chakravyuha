@@ -65,6 +65,14 @@ export interface GuidedFlowState {
 
 // ── Smart (Classification-first) Types ──────────────────────────────────────
 
+export interface WorkflowHandoff {
+  journey: string;
+  handler: string;
+  workflow?: string;
+  intent?: string;
+  domain?: string | null;
+}
+
 export interface SmartResponse {
   scenario: string;
   title: string;
@@ -76,6 +84,12 @@ export interface SmartResponse {
   helplines: string[];
   source: string; // "classifier" or "rag_fallback"
   response_language: string; // e.g. "en-IN", "hi-IN", "ta-IN"
+  intent?: string | null;
+  workflow?: string | null;
+  domain?: string | null;
+  handoff?: WorkflowHandoff | null;
+  routing_confidence?: number | null;
+  automatic_handoff?: boolean;
 }
 
 export interface SmartVoiceResponse {
@@ -447,6 +461,14 @@ export interface CivicProvenance {
   status?: string | null;
 }
 
+export interface JurisdictionCompleteness {
+  state_known: boolean;
+  district_known: boolean;
+  city_known: boolean;
+  locality_known: boolean;
+  authority_known: boolean;
+}
+
 export interface RTIIdentifyRequest {
   issue: string;
   state?: string;
@@ -464,6 +486,7 @@ export interface RTIDepartmentResponse extends CivicProvenance {
   confidence: CivicConfidence | number;
   reason: string;
   missing_information: string[];
+  jurisdiction_completeness: JurisdictionCompleteness;
   authority_type?: string | null;
   subtopic?: string | null;
   status?: string;
@@ -513,6 +536,7 @@ export interface RTIGuideResponse extends CivicProvenance {
 }
 
 export type SchemeProfileValue = string | number | boolean | null;
+export type SchemeComparisonValue = SchemeProfileValue | SchemeProfileValue[];
 export type SchemeProfile = Record<string, SchemeProfileValue>;
 
 export interface SchemeCondition {
@@ -522,10 +546,13 @@ export interface SchemeCondition {
   description?: string;
   outcome?: string;
   observed_value?: SchemeProfileValue;
+  expected_value?: SchemeComparisonValue;
+  operator?: string | null;
+  effect?: string | null;
   reason?: string | null;
   question?: string | null;
   source_url?: string | null;
-  expected?: SchemeProfileValue;
+  expected?: SchemeComparisonValue;
   actual?: SchemeProfileValue;
 }
 
@@ -592,6 +619,7 @@ export interface CPGRAMSPrepareRequest {
   grievance: string;
   state?: string;
   district?: string;
+  city?: string;
   locality?: string;
   organisation_hint?: string;
   incident_date?: string;
@@ -622,6 +650,7 @@ export interface CPGRAMSAuthority {
   candidate: string;
   confidence: CivicConfidence;
   reason: string;
+  status?: string;
   requires_verification: boolean;
   authority_hint?: string | null;
   authority_hint_status?: string | null;
@@ -647,21 +676,41 @@ export interface CPGRAMSFilingGuide {
   provenance?: CivicProvenance[];
 }
 
+export type CPGRAMSHandoffState =
+  | "DRAFT"
+  | "PREPARED"
+  | "REVIEWED"
+  | "CONFIRMATION_REQUIRED"
+  | "HANDOFF";
+
 export interface CPGRAMSPrepareResponse {
   status: string;
   classification: CPGRAMSClassification;
   suitability: CPGRAMSSuitability;
   authority: CPGRAMSAuthority;
   missing_information: string[];
+  jurisdiction_completeness: JurisdictionCompleteness;
   draft?: CPGRAMSDraft | null;
   filing_guide: CPGRAMSFilingGuide;
   sources: CivicProvenance[];
   disclaimer?: string;
+  intent?: string | null;
+  workflow?: string | null;
+  domain?: string | null;
+  handoff?: WorkflowHandoff | null;
+  handoff_state: CPGRAMSHandoffState;
+  handoff_blockers: string[];
+  external_action_requires_confirmation: boolean;
 }
 
 export interface LegalDomainQueryRequest {
   query: string;
   domain?: "consumer" | "tenant" | "labour" | "civic" | "government" | string;
+  state?: string;
+  district?: string;
+  city?: string;
+  locality?: string;
+  authority_hint?: string;
   jurisdiction?: string;
 }
 
@@ -687,7 +736,8 @@ export interface LegalDomainQueryResponse extends CivicProvenance {
   confidence?: CivicConfidence | number;
   requires_verification?: boolean;
   missing_information?: string[];
-  next_steps?: string[];
+  jurisdiction_completeness: JurisdictionCompleteness;
+  next_steps: string[];
   evidence_checklist?: string[];
   sources?: LegalDomainSource[];
   results?: LegalDomainSource[];

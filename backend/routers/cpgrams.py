@@ -19,6 +19,7 @@ async def prepare_cpgrams(request: CPGRAMSPrepareRequest) -> CPGRAMSPrepareRespo
             request.grievance,
             state=request.state or "",
             district=request.district or "",
+            city=request.city or "",
             locality=request.locality or "",
             authority_hint=request.organisation_hint or "",
             incident_date=request.incident_date or "",

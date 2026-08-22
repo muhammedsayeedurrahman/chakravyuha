@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+from typing import Annotated, Any, ClassVar
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictBool
 
 
 # ── Legal Section Models ─────────────────────────────────────────────────────
@@ -224,6 +224,65 @@ class KnowledgeStatus(str, Enum):
     UNAVAILABLE = "unavailable"
 
 
+class JurisdictionCompleteness(BaseModel):
+    """Presence tracking shared by civic workflows; it is not legal verification."""
+
+    model_config = {"frozen": True}
+
+    MISSING_VALUE_SENTINELS: ClassVar[frozenset[str]] = frozenset(
+        {
+            "unknown",
+            "not_applicable",
+            "not applicable",
+            "n/a",
+            "na",
+            "none",
+            "not known",
+            "don't know",
+            "do not know",
+        }
+    )
+
+    state_known: bool
+    district_known: bool
+    city_known: bool
+    locality_known: bool
+    authority_known: bool
+
+    @classmethod
+    def is_known_value(cls, value: object) -> bool:
+        cleaned = str(value or "").strip()
+        normalized = " ".join(
+            cleaned.casefold()
+            .strip(".,;:!?")
+            .replace("_", " ")
+            .replace("-", " ")
+            .split()
+        )
+        return bool(
+            cleaned
+            and normalized not in cls.MISSING_VALUE_SENTINELS
+        )
+
+    @classmethod
+    def from_values(
+        cls,
+        *,
+        state: object = None,
+        district: object = None,
+        city: object = None,
+        locality: object = None,
+        authority: object = None,
+    ) -> "JurisdictionCompleteness":
+        return cls(
+            state_known=cls.is_known_value(state),
+            district_known=cls.is_known_value(district),
+            city_known=cls.is_known_value(city),
+            locality_known=cls.is_known_value(locality),
+            authority_known=cls.is_known_value(authority),
+        )
+
+
 class Provenance(BaseModel):
     """Primary-source metadata carried through civic responses."""
 
@@ -264,6 +323,7 @@ class RTIRoutingResult(BaseModel):
     confidence: ConfidenceLevel
     reason: str
     missing_information: list[str] = Field(default_factory=list)
+    jurisdiction_completeness: JurisdictionCompleteness
     status: KnowledgeStatus
     source: str
     source_url: str | None = None
@@ -308,34 +368,38 @@ class RTIDraftResponse(BaseModel):
 
 # -- Government schemes -------------------------------------------------------
 
+ProfileBooleanAnswer = StrictBool | str | None
+ProfileAgeAnswer = Annotated[int, Field(strict=True, ge=0, le=120)] | str | None
+ProfileNumberAnswer = Annotated[float, Field(strict=True, ge=0)] | str | None
+
 class CitizenProfile(BaseModel):
-    """Known profile fields; extra scheme-specific answers remain supported."""
+    """Raw profile answers preserved for the scheme rule engine to validate."""
 
     model_config = ConfigDict(extra="allow")
 
-    age: int | None = Field(default=None, ge=0, le=120)
+    age: ProfileAgeAnswer = None
     state: str | None = Field(default=None, max_length=100)
     district: str | None = Field(default=None, max_length=100)
     occupation: str | None = Field(default=None, max_length=200)
-    monthly_income: float | None = Field(default=None, ge=0)
-    annual_income: float | None = Field(default=None, ge=0)
-    is_indian_citizen: bool | None = None
-    is_unorganised_worker: bool | None = None
-    income_tax_payer: bool | None = None
-    is_income_tax_payer: bool | None = None
-    is_or_has_been_income_tax_payer: bool | None = None
-    has_savings_bank_account: bool | None = None
-    has_savings_account: bool | None = None
-    covered_epfo: bool | None = None
-    covered_esic: bool | None = None
-    covered_nps: bool | None = None
-    covered_by_epfo: bool | None = None
-    covered_by_esic: bool | None = None
-    covered_by_nps: bool | None = None
-    already_has_apy_account: bool | None = None
-    is_landholding_farmer_family: bool | None = None
-    owns_cultivable_land: bool | None = None
-    pm_kisan_exclusion_category: bool | None = None
+    monthly_income: ProfileNumberAnswer = None
+    annual_income: ProfileNumberAnswer = None
+    is_indian_citizen: ProfileBooleanAnswer = None
+    is_unorganised_worker: ProfileBooleanAnswer = None
+    income_tax_payer: ProfileBooleanAnswer = None
+    is_income_tax_payer: ProfileBooleanAnswer = None
+    is_or_has_been_income_tax_payer: ProfileBooleanAnswer = None
+    has_savings_bank_account: ProfileBooleanAnswer = None
+    has_savings_account: ProfileBooleanAnswer = None
+    covered_epfo: ProfileBooleanAnswer = None
+    covered_esic: ProfileBooleanAnswer = None
+    covered_nps: ProfileBooleanAnswer = None
+    covered_by_epfo: ProfileBooleanAnswer = None
+    covered_by_esic: ProfileBooleanAnswer = None
+    covered_by_nps: ProfileBooleanAnswer = None
+    already_has_apy_account: ProfileBooleanAnswer = None
+    is_landholding_farmer_family: ProfileBooleanAnswer = None
+    owns_cultivable_land: ProfileBooleanAnswer = None
+    pm_kisan_exclusion_category: ProfileBooleanAnswer = None
 
 
 class SchemeEligibilityRequest(BaseModel):
@@ -357,6 +421,9 @@ class EligibilityCondition(BaseModel):
     field: str
     outcome: str = "unknown"
     observed_value: Any = None
+    expected_value: Any = None
+    operator: str | None = None
+    effect: str | None = None
     explanation: str = ""
     source_url: str | None = None
     reason: str | None = None
@@ -408,6 +475,7 @@ class CPGRAMSPrepareRequest(BaseModel):
     grievance: str = Field(..., min_length=10, max_length=10000)
     state: str | None = Field(default=None, max_length=100)
     district: str | None = Field(default=None, max_length=100)
+    city: str | None = Field(default=None, max_length=100)
     locality: str | None = Field(default=None, max_length=200)
     organisation_hint: str | None = Field(default=None, max_length=300)
     incident_date: str | None = Field(default=None, max_length=100)
@@ -487,16 +555,41 @@ class CPGRAMSFilingGuide(BaseModel):
     provenance: list[Provenance]
 
 
+class CPGRAMSWorkflowHandoff(BaseModel):
+    """Explicit transfer from CPGRAMS preparation to another civic workflow."""
+
+    model_config = {"frozen": True}
+
+    journey: str
+    handler: str
+
+
+class CPGRAMSHandoffState(str, Enum):
+    """Explicit, human-controlled CPGRAMS review and hand-off stages."""
+
+    DRAFT = "DRAFT"
+    PREPARED = "PREPARED"
+    REVIEWED = "REVIEWED"
+    CONFIRMATION_REQUIRED = "CONFIRMATION_REQUIRED"
+    HANDOFF = "HANDOFF"
+
+
 class CPGRAMSPrepareResponse(BaseModel):
     """Classification, routing, draft, and safe filing next steps."""
 
     model_config = {"frozen": True}
 
     status: str
+    intent: str = "government_service_grievance"
+    workflow: str = "cpgrams"
+    handoff: CPGRAMSWorkflowHandoff | None = None
+    handoff_state: CPGRAMSHandoffState
+    handoff_blockers: list[str] = Field(default_factory=list)
     classification: CPGRAMSClassification
     suitability: CPGRAMSSuitability
     authority: CPGRAMSAuthorityCandidate
     missing_information: list[str]
+    jurisdiction_completeness: JurisdictionCompleteness
     draft: CPGRAMSDraft | None = None
     filing_guide: CPGRAMSFilingGuide
     sources: list[Provenance]
@@ -511,6 +604,11 @@ class CivicLegalQueryRequest(BaseModel):
 
     query: str = Field(..., min_length=3, max_length=5000)
     domain: str | None = Field(default=None, pattern="^(consumer|tenant|labour)?$")
+    state: str | None = Field(default=None, max_length=100)
+    district: str | None = Field(default=None, max_length=100)
+    city: str | None = Field(default=None, max_length=100)
+    locality: str | None = Field(default=None, max_length=200)
+    authority_hint: str | None = Field(default=None, max_length=300)
     jurisdiction: str | None = Field(default=None, max_length=100)
     top_k: int = Field(default=5, ge=1, le=10)
 
@@ -544,9 +642,11 @@ class CivicLegalQueryResponse(BaseModel):
     query: str
     domain: str | None = None
     jurisdiction: str | None = None
+    jurisdiction_completeness: JurisdictionCompleteness
     confidence: ConfidenceLevel
     status: KnowledgeStatus
     results: list[CivicKnowledgeRecord]
     missing_information: list[str] = Field(default_factory=list)
+    next_steps: list[str] = Field(default_factory=list)
     answer: str
     disclaimer: str

@@ -23,6 +23,7 @@ from backend.models.schemas import (
     GuidedFlowState,
     GuidedFlowStep,
     GuidedOption,
+    JurisdictionCompleteness,
     LegalSection,
     QueryResponse,
     SectionResult,
@@ -381,17 +382,32 @@ class LegalService:
 
             self._civic_retriever = AdaptiveRAG()
 
+        state = next(
+            (
+                value.strip()
+                for value in (request.state, request.jurisdiction)
+                if JurisdictionCompleteness.is_known_value(value)
+            ),
+            None,
+        )
+        jurisdiction = JurisdictionCompleteness.from_values(
+            state=state,
+            district=request.district,
+            city=request.city,
+            locality=request.locality,
+            authority=request.authority_hint,
+        )
         domain = request.domain or self._infer_civic_domain(request.query)
         retrieval = self._civic_retriever.retrieve_civic(
             request.query,
             domain=domain,
-            jurisdiction=request.jurisdiction,
+            jurisdiction=state,
             top_k=request.top_k,
         )
         results = [CivicKnowledgeRecord(**record) for record in retrieval["records"]]
         missing: list[str] = []
 
-        if domain == "tenant" and not request.jurisdiction:
+        if domain == "tenant" and not jurisdiction.state_known:
             missing.append("State or Union Territory where the rented premises are located")
             confidence = ConfidenceLevel.REQUIRES_JURISDICTION
             status = KnowledgeStatus.REQUIRES_JURISDICTION
@@ -406,15 +422,24 @@ class LegalService:
                 else KnowledgeStatus.VERIFIED
             )
 
-        answer = self._build_civic_answer(domain, results, missing)
+        next_steps = self._build_civic_next_steps(
+            domain,
+            results,
+            jurisdiction,
+            state=state,
+            city=request.city,
+        )
+        answer = self._build_civic_answer(domain, results, missing, next_steps)
         return CivicLegalQueryResponse(
             query=request.query,
             domain=domain,
-            jurisdiction=request.jurisdiction,
+            jurisdiction=state,
+            jurisdiction_completeness=jurisdiction,
             confidence=confidence,
             status=status,
             results=results,
             missing_information=missing,
+            next_steps=next_steps,
             answer=answer,
             disclaimer=(
                 "This response provides source-linked legal information, not legal advice. "
@@ -424,38 +449,71 @@ class LegalService:
 
     @staticmethod
     def _infer_civic_domain(query: str) -> str | None:
-        text = query.casefold()
-        keywords = {
-            "consumer": ("consumer", "refund", "seller", "product", "warranty", "service provider"),
-            "tenant": ("tenant", "landlord", "rent", "lease", "eviction", "security deposit"),
-            "labour": ("employee", "employer", "salary", "wage", "workplace", "retrench", "epf", "esi", "posh"),
-        }
-        scores = {
-            domain: sum(term in text for term in terms)
-            for domain, terms in keywords.items()
-        }
-        best_domain, best_score = max(scores.items(), key=lambda item: item[1])
-        return best_domain if best_score else None
+        from backend.agent.intent_classifier import infer_rights_domain
+
+        return infer_rights_domain(query)
 
     @staticmethod
     def _build_civic_answer(
         domain: str | None,
         results: list[CivicKnowledgeRecord],
         missing: list[str],
+        next_steps: list[str],
     ) -> str:
         if not results:
+            if missing:
+                return f"No verified source record matched this issue. Provide: {', '.join(missing)}."
             return (
-                "No verified source record matched this issue. Add whether it is a consumer, "
-                "tenant, or workplace matter and provide the relevant jurisdiction."
+                "No verified source record matched this issue. Clarify whether it is a "
+                "consumer, tenant, or workplace matter and add more factual detail."
             )
         lead = results[0]
         parts = [lead.summary]
         if missing:
             parts.append(f"Before relying on a rule, provide: {', '.join(missing)}.")
-        if lead.guidance:
-            parts.append(f"Practical next step: {lead.guidance[0]}")
+        if next_steps:
+            parts.append(f"Practical next step: {next_steps[0]}")
         parts.append(f"Primary source: {lead.source}.")
         return " ".join(parts)
+
+    @staticmethod
+    def _build_civic_next_steps(
+        domain: str | None,
+        results: list[CivicKnowledgeRecord],
+        jurisdiction: JurisdictionCompleteness,
+        *,
+        state: str | None,
+        city: str | None,
+    ) -> list[str]:
+        steps: list[str] = []
+        if domain == "tenant":
+            city_label = (city or "").strip()
+            if jurisdiction.state_known and jurisdiction.city_known:
+                steps.append(
+                    f"{state} and {city_label} identified; verify the locally applicable "
+                    "tenancy rule and forum before relying on it."
+                )
+            elif jurisdiction.state_known:
+                steps.append(
+                    f"{state} identified; city/local jurisdiction may still be required "
+                    "before relying on a tenancy rule."
+                )
+            else:
+                steps.append(
+                    "Provide the State or Union Territory where the rented premises are "
+                    "located; city/local jurisdiction may also be required."
+                )
+
+        for result in results:
+            for step in result.guidance:
+                if (
+                    domain == "tenant"
+                    and "provide the state or union territory" in step.casefold()
+                ):
+                    continue
+                if step not in steps:
+                    steps.append(step)
+        return steps
 
 
 # Thread-safe singleton via lru_cache

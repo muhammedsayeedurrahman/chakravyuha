@@ -1,9 +1,23 @@
 "use client";
 
-import { useCallback, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useMemo, useReducer, useState, type CSSProperties, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/Card";
+import {
+  INITIAL_CPGRAMS_HANDOFF_STATE,
+  cpgramsConfirmationBlockers,
+  cpgramsHandoffBlockers,
+  cpgramsHandoffReducer,
+  cpgramsReviewBlockers,
+} from "@/components/cpgramsHandoffMachine";
 import { StepWizard } from "@/components/StepWizard";
+import type {
+  CivicJourney,
+  CivicRightsDomain,
+  CivicWorkflowContext,
+  CivicWorkflowLaunch,
+} from "@/lib/civicWorkflowHandoff";
+import { createCivicWorkflowContext } from "@/lib/civicWorkflowHandoff";
 import {
   draftRTI,
   downloadRTI,
@@ -29,7 +43,7 @@ import {
   type SchemeSummary,
 } from "@/services/api";
 
-export type CivicJourney = "rti" | "schemes" | "cpgrams" | "rights";
+export type { CivicJourney } from "@/lib/civicWorkflowHandoff";
 
 export interface CivicFilingHandoff {
   portalId: "cpgrams";
@@ -38,7 +52,9 @@ export interface CivicFilingHandoff {
 
 interface CivicAssistantProps {
   initialJourney?: CivicJourney;
+  initialContext?: CivicWorkflowLaunch | null;
   onOpenClaw?: (handoff: CivicFilingHandoff) => void;
+  onOpenLegal?: (target: "chat" | "draft") => void;
 }
 
 const JOURNEYS: Array<{
@@ -179,7 +195,7 @@ function StateField({ value, onChange, optional = true }: { value: string; onCha
         className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
         style={INPUT_STYLE}
       >
-        <option value="">Select only if known</option>
+        <option value="">{optional ? "Select only if known" : "Select State or Union Territory"}</option>
         {INDIAN_STATES_AND_UTS.map((state) => (
           <option key={state} value={state}>{state}</option>
         ))}
@@ -234,6 +250,18 @@ function Notice({ children, tone = "info" }: { children: ReactNode; tone?: "info
     <div className="rounded-xl px-3 py-2.5 text-xs leading-relaxed" style={{ color: colors.color, background: colors.background, border: `1px solid ${colors.border}` }}>
       {children}
     </div>
+  );
+}
+
+function HandoffPrerequisites({ action, items }: { action: string; items: string[] }) {
+  if (items.length === 0) return null;
+  return (
+    <Notice tone="warning">
+      <p className="font-semibold">{action} is unavailable until:</p>
+      <ul className="mt-1 list-disc space-y-0.5 pl-4">
+        {items.map((item) => <li key={item}>{item}</li>)}
+      </ul>
+    </Notice>
   );
 }
 
@@ -335,9 +363,9 @@ function SectionTitle({ eyebrow, title, description }: { eyebrow: string; title:
   );
 }
 
-function RTIAssistant() {
+function RTIAssistant({ initialIssue = "" }: { initialIssue?: string }) {
   const [step, setStep] = useState(1);
-  const [issue, setIssue] = useState("");
+  const [issue, setIssue] = useState(initialIssue);
   const [stateName, setStateName] = useState("");
   const [district, setDistrict] = useState("");
   const [city, setCity] = useState("");
@@ -706,7 +734,7 @@ function ConditionList({ title, items, color }: { title: string; items?: Array<S
   );
 }
 
-function SchemeAssistant() {
+function SchemeAssistant({ initialSearch = "" }: { initialSearch?: string }) {
   const [step, setStep] = useState(1);
   const [stateName, setStateName] = useState("");
   const [age, setAge] = useState("");
@@ -716,7 +744,7 @@ function SchemeAssistant() {
   const [results, setResults] = useState<SchemeEligibilityResult[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
   const [searchResults, setSearchResults] = useState<SchemeSummary[]>([]);
   const [searching, setSearching] = useState(false);
 
@@ -882,11 +910,22 @@ function cpgramsDraftSubject(draft: CPGRAMSPrepareResponse["draft"]): string {
   return draft?.subject ?? "";
 }
 
-function CPGRAMSAssistant({ onOpenClaw }: { onOpenClaw?: (handoff: CivicFilingHandoff) => void }) {
+function CPGRAMSAssistant({
+  initialGrievance = "",
+  onOpenClaw,
+  onRedirect,
+  onOpenLegal,
+}: {
+  initialGrievance?: string;
+  onOpenClaw?: (handoff: CivicFilingHandoff) => void;
+  onRedirect: (journey: CivicJourney, narrative: string, domain?: string | null) => void;
+  onOpenLegal?: (target: "chat" | "draft") => void;
+}) {
   const [step, setStep] = useState(1);
-  const [grievance, setGrievance] = useState("");
+  const [grievance, setGrievance] = useState(initialGrievance);
   const [stateName, setStateName] = useState("");
   const [district, setDistrict] = useState("");
+  const [city, setCity] = useState("");
   const [locality, setLocality] = useState("");
   const [organisationHint, setOrganisationHint] = useState("");
   const [incidentDate, setIncidentDate] = useState("");
@@ -898,7 +937,10 @@ function CPGRAMSAssistant({ onOpenClaw }: { onOpenClaw?: (handoff: CivicFilingHa
   const [result, setResult] = useState<CPGRAMSPrepareResponse | null>(null);
   const [subject, setSubject] = useState("");
   const [draftText, setDraftText] = useState("");
-  const [confirmed, setConfirmed] = useState(false);
+  const [handoffMachine, dispatchHandoff] = useReducer(
+    cpgramsHandoffReducer,
+    INITIAL_CPGRAMS_HANDOFF_STATE,
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -909,12 +951,12 @@ function CPGRAMSAssistant({ onOpenClaw }: { onOpenClaw?: (handoff: CivicFilingHa
     }
     setBusy(true);
     setError("");
-    setConfirmed(false);
     try {
       const response = await prepareCPGRAMS({
         grievance: grievance.trim(),
         state: stateName || undefined,
         district: district.trim() || undefined,
+        city: city.trim() || undefined,
         locality: locality.trim() || undefined,
         organisation_hint: organisationHint.trim() || undefined,
         incident_date: incidentDate || undefined,
@@ -924,39 +966,118 @@ function CPGRAMSAssistant({ onOpenClaw }: { onOpenClaw?: (handoff: CivicFilingHa
         prior_steps: priorStepsText.split(/\r?\n/).map((item) => item.trim()).filter(Boolean),
         evidence: evidenceText.split(/\r?\n/).map((item) => item.trim()).filter(Boolean),
       });
+      const preparedSubject = cpgramsDraftSubject(response.draft);
+      const preparedText = cpgramsDraftText(response.draft);
       setResult(response);
-      setSubject(cpgramsDraftSubject(response.draft));
-      setDraftText(cpgramsDraftText(response.draft));
+      setSubject(preparedSubject);
+      setDraftText(preparedText);
+      dispatchHandoff({
+        type: "PREPARATION_RECEIVED",
+        backendState: response.handoff_state,
+        serverBlockers: response.handoff_blockers,
+        hasDraft: Boolean(response.draft),
+        subject: preparedSubject,
+        draftText: preparedText,
+      });
       setStep(2);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not prepare the grievance.");
     } finally {
       setBusy(false);
     }
-  }, [grievance, stateName, district, locality, organisationHint, incidentDate, priorReference, desiredResolution, accountStatus, priorStepsText, evidenceText]);
+  }, [grievance, stateName, district, city, locality, organisationHint, incidentDate, priorReference, desiredResolution, accountStatus, priorStepsText, evidenceText]);
 
   const classification = result?.classification;
   const authorities = result?.authority ? [result.authority] : [];
+  const redirectKey = result?.handoff?.journey
+    || result?.workflow
+    || (result?.intent === "information_request" ? "rti" : null);
+  const redirectJourney: CivicJourney | null = redirectKey
+    ? ({
+        rti: "rti",
+        scheme_eligibility: "schemes",
+        schemes: "schemes",
+        rights: "rights",
+        rights_guidance: "rights",
+      } as Record<string, CivicJourney>)[redirectKey] ?? null
+    : null;
+  const redirectLabel = redirectJourney
+    ? JOURNEYS.find((journey) => journey.id === redirectJourney)?.label
+    : null;
+  const legalRedirect = redirectKey === "complaint_draft"
+    ? { target: "draft" as const, label: "Complaint Drafter" }
+    : redirectKey === "criminal" || redirectKey === "legal"
+      ? { target: "chat" as const, label: "Legal Assistant" }
+      : null;
   const isRedirected = result?.suitability?.is_suitable === false;
   const filingSteps = result?.filing_guide?.steps ?? [];
   const trackingSteps = result?.filing_guide?.tracking ?? [];
   const evidence = result?.draft?.evidence ?? [];
-  const canHandoff = Boolean(result?.draft && draftText.trim() && result.missing_information.length === 0 && !isRedirected);
+
+  const reviewBlockers = cpgramsReviewBlockers(handoffMachine);
+  const confirmationBlockers = cpgramsConfirmationBlockers(handoffMachine);
+  const finalHandoffBlockers = cpgramsHandoffBlockers(handoffMachine, Boolean(onOpenClaw));
+
+  const editIssueDetails = useCallback(() => {
+    dispatchHandoff({ type: "RESET" });
+    setResult(null);
+    setSubject("");
+    setDraftText("");
+    setStep(1);
+  }, []);
+
+  const returnToDraft = useCallback(() => {
+    dispatchHandoff({ type: "RETURN_TO_DRAFT" });
+    setStep(2);
+  }, []);
+
+  const changeSubject = useCallback((value: string) => {
+    setSubject(value);
+    dispatchHandoff({ type: "DRAFT_EDITED", subject: value, draftText });
+  }, [draftText]);
+
+  const changeDraftText = useCallback((value: string) => {
+    setDraftText(value);
+    dispatchHandoff({ type: "DRAFT_EDITED", subject, draftText: value });
+  }, [subject]);
+
+  const reviewDraft = useCallback(() => {
+    if (reviewBlockers.length > 0) return;
+    dispatchHandoff({ type: "REVIEW_REQUESTED" });
+    setStep(3);
+  }, [reviewBlockers]);
+
+  const requestConfirmation = useCallback(() => {
+    if (confirmationBlockers.length > 0) return;
+    dispatchHandoff({ type: "CONFIRMATION_REQUESTED" });
+  }, [confirmationBlockers]);
+
+  const changeJourneyStep = useCallback((nextStep: number) => {
+    if (nextStep === 1 && step > 1) {
+      editIssueDetails();
+      return;
+    }
+    if (nextStep === 2 && step === 3) {
+      returnToDraft();
+    }
+  }, [editIssueDetails, returnToDraft, step]);
 
   const handoff = useCallback(() => {
-    if (!confirmed || !canHandoff || !onOpenClaw) return;
+    if (finalHandoffBlockers.length > 0 || !onOpenClaw) return;
     const userData = Object.fromEntries(Object.entries({
       description: draftText.trim(),
       subject: subject.trim(),
       state: stateName,
       district: district.trim(),
+      city: city.trim(),
     }).filter(([, value]) => value));
+    dispatchHandoff({ type: "HANDOFF_REQUESTED" });
     onOpenClaw({ portalId: "cpgrams", userData });
-  }, [confirmed, canHandoff, onOpenClaw, draftText, subject, stateName, district]);
+  }, [finalHandoffBlockers, onOpenClaw, draftText, subject, stateName, district, city]);
 
   return (
     <div className="space-y-4">
-      <JourneyWizard current={step} labels={["Describe", "Prepare & review", "Confirm hand-off"]} onStep={setStep} />
+      <JourneyWizard current={step} labels={["Describe", "Prepare & review", "Confirm hand-off"]} onStep={changeJourneyStep} />
       <Notice tone="info">This workspace prepares a draft only. Nothing is sent to CPGRAMS from this screen.</Notice>
       {error && <Notice tone="error">{error}</Notice>}
       {step === 1 && (
@@ -969,13 +1090,14 @@ function CPGRAMSAssistant({ onOpenClaw }: { onOpenClaw?: (handoff: CivicFilingHa
                 <textarea value={grievance} onChange={(event) => setGrievance(event.target.value)} rows={6} placeholder="Describe the service problem, relevant dates, office interactions, and current impact." className="w-full resize-y rounded-xl px-3 py-2.5 text-sm outline-none" style={INPUT_STYLE} />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <StateField value={stateName} onChange={setStateName} />
-                <TextField label="District" value={district} onChange={setDistrict} optional />
+                <StateField value={stateName} onChange={setStateName} optional={false} />
+                <TextField label="District (or provide city)" value={district} onChange={setDistrict} />
+                <TextField label="City (or provide district)" value={city} onChange={setCity} />
                 <TextField label="Locality" value={locality} onChange={setLocality} optional />
-                <TextField label="Incident / last action date" value={incidentDate} onChange={setIncidentDate} optional type="date" />
-                <TextField label="Organisation hint" value={organisationHint} onChange={setOrganisationHint} optional placeholder="Ministry, department, or office only if already known" />
+                <TextField label="Incident date or period" value={incidentDate} onChange={setIncidentDate} placeholder="Date or period, e.g. 1 May 2026 or June-August 2026" />
+                <TextField label="Public authority or office involved" value={organisationHint} onChange={setOrganisationHint} placeholder="Ministry, department, municipal body, or office" />
                 <TextField label="Prior reference" value={priorReference} onChange={setPriorReference} optional />
-                <TextField label="Desired resolution" value={desiredResolution} onChange={setDesiredResolution} optional />
+                <TextField label="Desired resolution" value={desiredResolution} onChange={setDesiredResolution} />
                 <div>
                   <FieldLabel>CPGRAMS account status</FieldLabel>
                   <select value={accountStatus} onChange={(event) => setAccountStatus(event.target.value as typeof accountStatus)} className="w-full rounded-xl px-3 py-2.5 text-sm" style={INPUT_STYLE}>
@@ -1015,7 +1137,22 @@ function CPGRAMSAssistant({ onOpenClaw }: { onOpenClaw?: (handoff: CivicFilingHa
                   </div>
                 ))}
                 <MissingInformation items={result.missing_information} />
-                {isRedirected && <Notice tone="warning">{result.suitability?.alternative_path || result.suitability?.reason || "This issue may need a different pathway. Do not file it on CPGRAMS without verification."}</Notice>}
+                {!result.draft && <HandoffPrerequisites action="Review safe hand-off" items={reviewBlockers} />}
+                {isRedirected && (
+                  <div className="space-y-2">
+                    <Notice tone="warning">{result.suitability?.alternative_path || result.suitability?.reason || "This issue may need a different pathway. Do not file it on CPGRAMS without verification."}</Notice>
+                    {redirectJourney && (
+                      <ActionButton onClick={() => onRedirect(redirectJourney, grievance, result.domain)}>
+                        Continue to {redirectLabel || "matched civic workflow"}
+                      </ActionButton>
+                    )}
+                    {legalRedirect && onOpenLegal && (
+                      <ActionButton onClick={() => onOpenLegal(legalRedirect.target)}>
+                        Continue to {legalRedirect.label}
+                      </ActionButton>
+                    )}
+                  </div>
+                )}
               </div>
             </Card.Body>
           </Card>
@@ -1024,15 +1161,16 @@ function CPGRAMSAssistant({ onOpenClaw }: { onOpenClaw?: (handoff: CivicFilingHa
               <Card.Header><h3 className="text-sm font-bold" style={{ color: "var(--color-text)" }}>Editable grievance draft</h3></Card.Header>
               <Card.Body>
                 <div className="space-y-3">
-                  <TextField label="Subject" value={subject} onChange={setSubject} />
+                  <TextField label="Subject" value={subject} onChange={changeSubject} />
                   <div>
                     <FieldLabel>Grievance text</FieldLabel>
-                    <textarea value={draftText} onChange={(event) => setDraftText(event.target.value)} rows={12} className="w-full resize-y rounded-xl px-3 py-2.5 text-xs leading-relaxed outline-none" style={INPUT_STYLE} />
+                    <textarea value={draftText} onChange={(event) => changeDraftText(event.target.value)} rows={12} className="w-full resize-y rounded-xl px-3 py-2.5 text-xs leading-relaxed outline-none" style={INPUT_STYLE} />
                   </div>
                   {evidence.length > 0 && <div><p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-secondary)" }}>Evidence checklist</p><ul className="mt-1 grid gap-1 sm:grid-cols-2">{evidence.map((item) => <li key={item} className="text-xs" style={{ color: "var(--color-text-muted)" }}>☐ {item}</li>)}</ul></div>}
+                  <HandoffPrerequisites action="Review safe hand-off" items={reviewBlockers} />
                   <div className="flex flex-wrap gap-2">
-                    <ActionButton onClick={() => setStep(1)} secondary>Edit issue details</ActionButton>
-                    <ActionButton onClick={() => setStep(3)} disabled={!canHandoff}>Review safe hand-off</ActionButton>
+                    <ActionButton onClick={editIssueDetails} secondary>Edit issue details</ActionButton>
+                    <ActionButton onClick={reviewDraft} disabled={reviewBlockers.length > 0}>Review safe hand-off</ActionButton>
                   </div>
                 </div>
               </Card.Body>
@@ -1047,19 +1185,52 @@ function CPGRAMSAssistant({ onOpenClaw }: { onOpenClaw?: (handoff: CivicFilingHa
           <Card>
             <Card.Body>
               <div className="space-y-4">
-                <SectionTitle eyebrow="Human confirmation" title="Review before opening assisted filing" description="Continuing transfers only this reviewed draft and non-sensitive routing hints to the existing filing screen. It does not submit the grievance." />
+                <SectionTitle
+                  eyebrow={`Hand-off stage · ${handoffMachine.phase}`}
+                  title={handoffMachine.phase === "REVIEWED" ? "Reviewed draft" : "Human confirmation required"}
+                  description="Continuing transfers only this reviewed draft and non-sensitive routing hints to the existing filing screen. It does not submit the grievance."
+                />
                 <div className="rounded-xl p-3 text-xs" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid var(--color-border)" }}>
                   <p className="font-semibold" style={{ color: "var(--color-text)" }}>{subject}</p>
                   <p className="mt-2 max-h-44 overflow-y-auto whitespace-pre-wrap" style={{ color: "var(--color-text-muted)" }}>{draftText}</p>
                 </div>
-                <label className="flex cursor-pointer items-start gap-2 rounded-xl p-3 text-xs" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", color: "var(--color-text-muted)" }}>
-                  <input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} className="mt-0.5" />
-                  <span>I reviewed the classification, authority uncertainty, subject, and grievance text. I understand the next screen will separately require my details, CAPTCHA/OTP actions, and final submission confirmation.</span>
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  <ActionButton onClick={() => setStep(2)} secondary>Back to draft</ActionButton>
-                  <ActionButton onClick={handoff} disabled={!confirmed || !canHandoff || !onOpenClaw}>Continue to CPGRAMS filing screen</ActionButton>
-                </div>
+                {handoffMachine.phase === "REVIEWED" && (
+                  <div className="space-y-3">
+                    <Notice tone="info">The draft is reviewed. Continue once to reveal the separate, mandatory human-confirmation gate.</Notice>
+                    <HandoffPrerequisites action="Continue to confirmation" items={confirmationBlockers} />
+                    <div className="flex flex-wrap gap-2">
+                      <ActionButton onClick={returnToDraft} secondary>Back to draft</ActionButton>
+                      <ActionButton onClick={requestConfirmation} disabled={confirmationBlockers.length > 0}>Continue to mandatory confirmation</ActionButton>
+                    </div>
+                  </div>
+                )}
+                {handoffMachine.phase === "CONFIRMATION_REQUIRED" && (
+                  <div className="space-y-3">
+                    <label className="flex cursor-pointer items-start gap-2 rounded-xl p-3 text-xs" style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", color: "var(--color-text-muted)" }}>
+                      <input
+                        type="checkbox"
+                        checked={handoffMachine.confirmationAccepted}
+                        onChange={(event) => dispatchHandoff({ type: "CONFIRMATION_CHANGED", accepted: event.target.checked })}
+                        className="mt-0.5"
+                      />
+                      <span>I reviewed the classification, authority uncertainty, subject, and grievance text. I understand the next screen will separately require my details, CAPTCHA/OTP actions, and final submission confirmation.</span>
+                    </label>
+                    <HandoffPrerequisites action="Continue to CPGRAMS filing screen" items={finalHandoffBlockers} />
+                    <div className="flex flex-wrap gap-2">
+                      <ActionButton onClick={returnToDraft} secondary>Back to draft</ActionButton>
+                      <ActionButton onClick={handoff} disabled={finalHandoffBlockers.length > 0}>Continue to CPGRAMS filing screen</ActionButton>
+                    </div>
+                  </div>
+                )}
+                {handoffMachine.phase === "HANDOFF" && (
+                  <Notice tone="success">The reviewed draft is being transferred to the assisted filing screen. Final submission remains under your control.</Notice>
+                )}
+                {(handoffMachine.phase === "DRAFT" || handoffMachine.phase === "PREPARED") && (
+                  <div className="space-y-3">
+                    <HandoffPrerequisites action="Continue to confirmation" items={confirmationBlockers} />
+                    <ActionButton onClick={returnToDraft} secondary>Back to draft</ActionButton>
+                  </div>
+                )}
               </div>
             </Card.Body>
           </Card>
@@ -1088,11 +1259,18 @@ function SimpleSteps({ title, items }: { title: string; items: string[] }) {
   );
 }
 
-function RightsNavigator() {
+function RightsNavigator({
+  initialQuery = "",
+  initialDomain,
+}: {
+  initialQuery?: string;
+  initialDomain?: CivicRightsDomain;
+}) {
   const [step, setStep] = useState(1);
-  const [query, setQuery] = useState("");
-  const [domain, setDomain] = useState<"consumer" | "tenant" | "labour" | "">("");
-  const [jurisdiction, setJurisdiction] = useState("");
+  const [query, setQuery] = useState(initialQuery);
+  const [domain, setDomain] = useState<"consumer" | "tenant" | "labour" | "">(initialDomain ?? "");
+  const [stateName, setStateName] = useState("");
+  const [city, setCity] = useState("");
   const [result, setResult] = useState<LegalDomainQueryResponse | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -1108,7 +1286,8 @@ function RightsNavigator() {
       const response = await queryLegalDomain({
         query: query.trim(),
         domain: domain || undefined,
-        jurisdiction: jurisdiction || undefined,
+        state: stateName || undefined,
+        city: city.trim() || undefined,
       });
       setResult(response);
       setStep(2);
@@ -1117,7 +1296,7 @@ function RightsNavigator() {
     } finally {
       setBusy(false);
     }
-  }, [query, domain, jurisdiction]);
+  }, [query, domain, stateName, city]);
 
   const sources = result?.sources?.length ? result.sources : result?.results ?? [];
   const answer = result?.answer ?? result?.guidance ?? "";
@@ -1149,7 +1328,8 @@ function RightsNavigator() {
                     <option value="labour">Labour / workplace</option>
                   </select>
                 </div>
-                <StateField value={jurisdiction} onChange={setJurisdiction} />
+                <StateField value={stateName} onChange={setStateName} />
+                <TextField label="City" value={city} onChange={setCity} optional />
               </div>
               <ActionButton onClick={run} disabled={busy}>{busy ? <BusyLabel label="Finding sourced guidance..." /> : "Understand rights and pathway"}</ActionButton>
             </div>
@@ -1220,8 +1400,30 @@ function RightsNavigator() {
   );
 }
 
-export function CivicAssistant({ initialJourney = "rti", onOpenClaw }: CivicAssistantProps) {
+export function CivicAssistant({
+  initialJourney = "rti",
+  initialContext = null,
+  onOpenClaw,
+  onOpenLegal,
+}: CivicAssistantProps) {
   const [journey, setJourney] = useState<CivicJourney>(initialJourney);
+  const [workflowContext, setWorkflowContext] = useState<CivicWorkflowContext | null>(initialContext);
+  const matchingContext = workflowContext?.journey === journey ? workflowContext : null;
+  const redirectWithinCivic = useCallback((
+    nextJourney: CivicJourney,
+    narrative: string,
+    domain?: string | null,
+  ) => {
+    const nextContext = createCivicWorkflowContext(
+      nextJourney,
+      narrative,
+      workflowContext?.language ?? "en-IN",
+      domain,
+    );
+    if (!nextContext) return;
+    setWorkflowContext(nextContext);
+    setJourney(nextJourney);
+  }, [workflowContext?.language]);
   return (
     <div className="flex flex-col gap-4 px-4">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="text-center">
@@ -1257,10 +1459,10 @@ export function CivicAssistant({ initialJourney = "rti", onOpenClaw }: CivicAssi
 
       <AnimatePresence mode="wait">
         <motion.div key={journey} role="tabpanel" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
-          {journey === "rti" && <RTIAssistant />}
-          {journey === "schemes" && <SchemeAssistant />}
-          {journey === "cpgrams" && <CPGRAMSAssistant onOpenClaw={onOpenClaw} />}
-          {journey === "rights" && <RightsNavigator />}
+          {journey === "rti" && <RTIAssistant initialIssue={matchingContext?.narrative} />}
+          {journey === "schemes" && <SchemeAssistant initialSearch={matchingContext?.narrative} />}
+          {journey === "cpgrams" && <CPGRAMSAssistant initialGrievance={matchingContext?.narrative} onOpenClaw={onOpenClaw} onRedirect={redirectWithinCivic} onOpenLegal={onOpenLegal} />}
+          {journey === "rights" && <RightsNavigator initialQuery={matchingContext?.narrative} initialDomain={matchingContext?.domain} />}
         </motion.div>
       </AnimatePresence>
     </div>

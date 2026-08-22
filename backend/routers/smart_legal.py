@@ -43,6 +43,12 @@ class SmartResponse(BaseModel):
     helplines: list[str] = []
     source: str = "classifier"  # "classifier" or "rag_fallback"
     response_language: str = "en-IN"  # Language the response is in
+    intent: str | None = None
+    workflow: str | None = None
+    domain: str | None = None
+    handoff: dict[str, str] | None = None
+    routing_confidence: float | None = None
+    automatic_handoff: bool = False
 
 
 class SmartVoiceResponse(BaseModel):

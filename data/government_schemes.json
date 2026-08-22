@@ -26,6 +26,19 @@
         "level": "central",
         "states": ["ALL"]
       },
+      "eligibility_schema": {
+        "version": "1.0",
+        "additional_properties": false,
+        "dependencies": {
+          "is_unorganised_worker": {"type": "boolean"},
+          "age": {"type": "integer"},
+          "monthly_income": {"type": "number"},
+          "is_income_tax_payer": {"type": "boolean"},
+          "covered_by_epfo": {"type": "boolean"},
+          "covered_by_esic": {"type": "boolean"},
+          "covered_by_nps": {"type": "boolean"}
+        }
+      },
       "eligibility_rules": [
         {
           "id": "pm_sym_unorganised_worker",
@@ -166,6 +179,17 @@
         "level": "central",
         "states": ["ALL"]
       },
+      "eligibility_schema": {
+        "version": "1.0",
+        "additional_properties": false,
+        "dependencies": {
+          "is_indian_citizen": {"type": "boolean"},
+          "age": {"type": "integer"},
+          "has_savings_account": {"type": "boolean"},
+          "is_or_has_been_income_tax_payer": {"type": "boolean"},
+          "already_has_apy_account": {"type": "boolean"}
+        }
+      },
       "eligibility_rules": [
         {
           "id": "apy_citizenship",
@@ -283,6 +307,22 @@
         "country": "India",
         "level": "central_with_state_verification",
         "states": ["ALL"]
+      },
+      "eligibility_schema": {
+        "version": "1.0",
+        "additional_properties": false,
+        "dependencies": {
+          "is_landholding_farmer_family": {"type": "boolean"},
+          "land_acquired_after_2019_02_01_other_than_inheritance": {"type": "boolean"},
+          "is_institutional_landholder": {"type": "boolean"},
+          "family_member_holds_or_held_constitutional_post": {"type": "boolean"},
+          "family_member_in_excluded_elected_office": {"type": "boolean"},
+          "family_member_is_non_exempt_government_employee": {"type": "boolean"},
+          "family_member_is_non_exempt_pensioner_10000_or_more": {"type": "boolean"},
+          "family_member_paid_income_tax_last_assessment_year": {"type": "boolean"},
+          "family_member_is_practising_registered_professional": {"type": "boolean"},
+          "family_is_nri_for_new_beneficiary_rule": {"type": "boolean"}
+        }
       },
       "eligibility_rules": [
         {

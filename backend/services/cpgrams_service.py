@@ -16,6 +16,21 @@ import re
 from dataclasses import asdict, dataclass
 from typing import Iterable
 
+from backend.agent.intent_classifier import (
+    INTENT_COMPLAINT_DRAFT,
+    INTENT_CRIMINAL_INCIDENT,
+    INTENT_ESCALATION,
+    INTENT_GOVERNMENT_SERVICE_GRIEVANCE,
+    INTENT_INFORMATION_REQUEST,
+    INTENT_RIGHTS_GUIDANCE,
+    INTENT_SCHEME_ELIGIBILITY,
+    INTENT_SECTION_LOOKUP,
+    IntentResult,
+    civic_handoff_for,
+    classify_intent,
+)
+from backend.models.schemas import CPGRAMSHandoffState, JurisdictionCompleteness
+
 
 @dataclass(frozen=True)
 class SourceRecord:
@@ -65,6 +80,21 @@ SOURCES = (
     CPGRAMS_STATUS_SOURCE,
     DARPG_GUIDELINES_SOURCE,
 )
+
+
+HANDOFF_PREREQUISITE_MESSAGES = {
+    "state_or_union_territory": "Provide the State or Union Territory.",
+    "district_or_city": "Provide either the district or city.",
+    "locality_or_service_location": "Provide the locality or service location.",
+    "public_authority_or_office_involved": (
+        "Identify the public authority or office involved."
+    ),
+    "incident_date_or_period": "Provide the incident date or period.",
+    "desired_resolution": "State the desired resolution.",
+    "cpgrams_account_status": (
+        "Confirm whether the citizen has a CPGRAMS account."
+    ),
+}
 
 
 @dataclass(frozen=True)
@@ -265,6 +295,11 @@ def _clean_text(value: object) -> str:
     return re.sub(r"\s+", " ", str(value or "").strip())
 
 
+def _clean_known_text(value: object) -> str:
+    cleaned = _clean_text(value)
+    return cleaned if JurisdictionCompleteness.is_known_value(cleaned) else ""
+
+
 def _clean_items(values: Iterable[object] | None) -> list[str]:
     if not values:
         return []
@@ -285,6 +320,7 @@ class CPGRAMSService:
         *,
         state: str = "",
         district: str = "",
+        city: str = "",
         locality: str = "",
         authority_hint: str = "",
         incident_date: str = "",
@@ -305,31 +341,129 @@ class CPGRAMSService:
         if len(narrative) < 10:
             raise ValueError("Narrative must contain at least 10 characters.")
 
+        intent_result = classify_intent(narrative, allow_llm_fallback=False)
+
         context = {
-            "state": _clean_text(state),
-            "district": _clean_text(district),
-            "locality": _clean_text(locality),
-            "authority_hint": _clean_text(authority_hint),
-            "incident_date": _clean_text(incident_date),
+            "state": _clean_known_text(state),
+            "district": _clean_known_text(district),
+            "city": _clean_known_text(city),
+            "locality": _clean_known_text(locality),
+            "authority_hint": _clean_known_text(authority_hint),
+            "incident_date": _clean_known_text(incident_date),
             "prior_steps": _clean_items(prior_steps),
             "prior_reference": _clean_text(prior_reference),
-            "desired_resolution": _clean_text(desired_resolution),
+            "desired_resolution": _clean_known_text(desired_resolution),
             "evidence": _clean_items(evidence),
             "cpgrams_account_status": _clean_text(cpgrams_account_status).lower() or "unknown",
         }
+        jurisdiction = JurisdictionCompleteness.from_values(
+            state=context["state"],
+            district=context["district"],
+            city=context["city"],
+            locality=context["locality"],
+            authority=context["authority_hint"],
+        ).model_dump()
+
+        if intent_result.intent == INTENT_INFORMATION_REQUEST:
+            routed_handoff = civic_handoff_for(intent_result)
+            if routed_handoff is None or routed_handoff.get("journey") != "rti":
+                raise RuntimeError("Information requests must have an explicit RTI handoff.")
+            handoff = {
+                "journey": routed_handoff["journey"],
+                "handler": routed_handoff["handler"],
+            }
+            confidence = (
+                "high"
+                if intent_result.confidence >= 0.8
+                else "medium"
+                if intent_result.confidence >= 0.6
+                else "low"
+            )
+            return {
+                "status": "not_suitable",
+                "intent": INTENT_INFORMATION_REQUEST,
+                "workflow": "rti",
+                "handoff": handoff,
+                "handoff_state": CPGRAMSHandoffState.DRAFT.value,
+                "handoff_blockers": [
+                    "CPGRAMS review is unavailable: The official CPGRAMS portal states "
+                    "that RTI matters are not taken up for redress. Continue in the RTI "
+                    "workflow instead."
+                ],
+                "classification": {
+                    "domain": "information_request",
+                    "label": "Request for existing government records or information",
+                    "confidence": confidence,
+                    "reason": (
+                        "The shared top-level intent router identified a request for existing "
+                        "government records or information before CPGRAMS topic classification."
+                    ),
+                },
+                "suitability": {
+                    "is_suitable": False,
+                    "exclusion_category": "rti_matter",
+                    "reason": (
+                        "The official CPGRAMS portal states that RTI matters are not taken up "
+                        "for redress."
+                    ),
+                    "alternative_path": (
+                        "Continue in the RTI assistant to identify the record-holding public "
+                        "authority and prepare a reviewable information request."
+                    ),
+                    "requires_verification": False,
+                },
+                "authority": self._authority(
+                    DomainRule(
+                        domain="information_request",
+                        label="Government records or information request",
+                        authority_type="Record-holding public authority",
+                        candidate="Resolve in the RTI workflow",
+                        patterns=(),
+                    ),
+                    context,
+                    excluded=True,
+                ),
+                "missing_information": [],
+                "jurisdiction_completeness": jurisdiction,
+                "draft": None,
+                "filing_guide": self.get_filing_guide(),
+                "sources": self.get_sources(),
+            }
 
         exclusion_context = " ".join([narrative, *context["prior_steps"]])
-        service_matter_channels_exhausted = (
-            any(
-                rule.category == "government_employee_service_matter"
-                and any(pattern.search(exclusion_context) for pattern in rule.patterns)
-                for rule in EXCLUSION_RULES
-            )
-            and any(
-                pattern.search(exclusion_context)
-                for pattern in SERVICE_CHANNELS_EXHAUSTED
-            )
+        service_matter_identified = any(
+            rule.category == "government_employee_service_matter"
+            and any(pattern.search(exclusion_context) for pattern in rule.patterns)
+            for rule in EXCLUSION_RULES
         )
+        service_matter_channels_exhausted = service_matter_identified and any(
+            pattern.search(exclusion_context)
+            for pattern in SERVICE_CHANNELS_EXHAUSTED
+        )
+
+        # Canonical intent routing precedes CPGRAMS-specific exclusions.  The
+        # one exception is the portal's own government-employee service-matter
+        # rule, which must retain its exhausted-channel condition.
+        strong_non_grievance_intents = {
+            INTENT_SCHEME_ELIGIBILITY,
+            INTENT_CRIMINAL_INCIDENT,
+            INTENT_ESCALATION,
+            INTENT_SECTION_LOOKUP,
+            INTENT_COMPLAINT_DRAFT,
+        }
+        if (
+            intent_result.intent != INTENT_GOVERNMENT_SERVICE_GRIEVANCE
+            and (
+                not service_matter_identified
+                or intent_result.intent in strong_non_grievance_intents
+            )
+        ):
+            return self._non_cpgrams_intent_response(
+                intent_result,
+                context,
+                jurisdiction,
+            )
+
         exclusion = self._match_exclusion(exclusion_context)
         domain, matched_terms = self._classify_domain(narrative)
         classification = self._classification(domain, matched_terms)
@@ -337,6 +471,13 @@ class CPGRAMSService:
         if exclusion:
             return {
                 "status": "not_suitable",
+                "intent": INTENT_GOVERNMENT_SERVICE_GRIEVANCE,
+                "workflow": "cpgrams",
+                "handoff": None,
+                "handoff_state": CPGRAMSHandoffState.DRAFT.value,
+                "handoff_blockers": [
+                    f"CPGRAMS review is unavailable: {exclusion.reason}"
+                ],
                 "classification": classification,
                 "suitability": {
                     "is_suitable": False,
@@ -347,6 +488,7 @@ class CPGRAMSService:
                 },
                 "authority": self._authority(domain, context, excluded=True),
                 "missing_information": [],
+                "jurisdiction_completeness": jurisdiction,
                 "draft": None,
                 "filing_guide": self.get_filing_guide(),
                 "sources": self.get_sources(),
@@ -355,9 +497,19 @@ class CPGRAMSService:
         missing = self._missing_information(domain, context)
         draft = self._build_draft(narrative, domain, context)
         status = "needs_information" if missing else "ready_for_review"
+        handoff_state = (
+            CPGRAMSHandoffState.DRAFT
+            if missing
+            else CPGRAMSHandoffState.PREPARED
+        )
 
         return {
             "status": status,
+            "intent": INTENT_GOVERNMENT_SERVICE_GRIEVANCE,
+            "workflow": "cpgrams",
+            "handoff": None,
+            "handoff_state": handoff_state.value,
+            "handoff_blockers": self._handoff_blockers(missing),
             "classification": classification,
             "suitability": {
                 "is_suitable": True,
@@ -380,7 +532,131 @@ class CPGRAMSService:
             },
             "authority": self._authority(domain, context),
             "missing_information": missing,
+            "jurisdiction_completeness": jurisdiction,
             "draft": draft,
+            "filing_guide": self.get_filing_guide(),
+            "sources": self.get_sources(),
+        }
+
+    def _non_cpgrams_intent_response(
+        self,
+        intent_result: IntentResult,
+        context: dict,
+        jurisdiction: dict,
+    ) -> dict:
+        """Return an explicit hand-off when CPGRAMS is the wrong workflow."""
+
+        routed = civic_handoff_for(intent_result)
+        if intent_result.intent in {
+            INTENT_CRIMINAL_INCIDENT,
+            INTENT_ESCALATION,
+            INTENT_SECTION_LOOKUP,
+            INTENT_COMPLAINT_DRAFT,
+        }:
+            route = {
+                INTENT_CRIMINAL_INCIDENT: (
+                    "criminal",
+                    "criminal",
+                    "smart_legal_pipeline",
+                    "Potential criminal incident",
+                ),
+                INTENT_ESCALATION: (
+                    "criminal",
+                    "criminal",
+                    "smart_legal_pipeline",
+                    "Urgent safety or criminal-law issue",
+                ),
+                INTENT_SECTION_LOOKUP: (
+                    "legal",
+                    "legal",
+                    "smart_legal_pipeline",
+                    "Legal section lookup",
+                ),
+                INTENT_COMPLAINT_DRAFT: (
+                    "complaint_draft",
+                    "complaint_draft",
+                    "complaint_drafter",
+                    "Legal complaint drafting request",
+                ),
+            }[intent_result.intent]
+            workflow, journey, handler, label = route
+            domain = intent_result.intent
+            handoff = {"journey": journey, "handler": handler}
+            alternative = (
+                "Continue in the existing legal workflow instead of CPGRAMS. Contact "
+                "emergency services immediately if anyone is in danger."
+            )
+        elif routed is not None:
+            workflow = routed["workflow"]
+            domain = intent_result.entities.get("domain") or intent_result.intent
+            label = {
+                INTENT_RIGHTS_GUIDANCE: "Tenant, consumer, or labour rights guidance",
+                INTENT_SCHEME_ELIGIBILITY: "Government scheme eligibility request",
+            }[intent_result.intent]
+            handoff = {
+                "journey": routed["journey"],
+                "handler": routed["handler"],
+            }
+            alternative = routed["message"]
+        else:
+            workflow = "legal"
+            domain = intent_result.intent
+            label = "General or legal query outside the CPGRAMS grievance workflow"
+            handoff = {"journey": "legal", "handler": "smart_legal_pipeline"}
+            alternative = (
+                "Continue in the general legal assistant. CPGRAMS drafting is available "
+                "only for a government service-delivery grievance."
+            )
+
+        confidence = (
+            "high"
+            if intent_result.confidence >= 0.8
+            else "medium"
+            if intent_result.confidence >= 0.6
+            else "low"
+        )
+        reason = (
+            "The shared top-level intent router identified a different requested action "
+            "before CPGRAMS grievance classification."
+        )
+        blocker = (
+            f"CPGRAMS review is unavailable: this request belongs in the {workflow} "
+            "workflow."
+        )
+        return {
+            "status": "not_suitable",
+            "intent": intent_result.intent,
+            "workflow": workflow,
+            "handoff": handoff,
+            "handoff_state": CPGRAMSHandoffState.DRAFT.value,
+            "handoff_blockers": [blocker],
+            "classification": {
+                "domain": domain,
+                "label": label,
+                "confidence": confidence,
+                "reason": reason,
+            },
+            "suitability": {
+                "is_suitable": False,
+                "exclusion_category": "different_workflow",
+                "reason": blocker,
+                "alternative_path": alternative,
+                "requires_verification": False,
+            },
+            "authority": self._authority(
+                DomainRule(
+                    domain=domain,
+                    label=label,
+                    authority_type="Resolved in the matched workflow",
+                    candidate="Resolve in the matched workflow",
+                    patterns=(),
+                ),
+                context,
+                excluded=True,
+            ),
+            "missing_information": [],
+            "jurisdiction_completeness": jurisdiction,
+            "draft": None,
             "filing_guide": self.get_filing_guide(),
             "sources": self.get_sources(),
         }
@@ -462,9 +738,18 @@ class CPGRAMSService:
             }
 
         jurisdiction_parts = [
-            value for value in (context["locality"], context["district"], context["state"]) if value
+            value
+            for value in (
+                context["locality"],
+                context["city"],
+                context["district"],
+                context["state"],
+            )
+            if value
         ]
-        has_jurisdiction = bool(context["state"] and context["district"])
+        has_jurisdiction = bool(
+            context["state"] and (context["district"] or context["city"])
+        )
         candidate = context["authority_hint"] or domain.candidate
         reason = (
             f"Broad topic routing for {domain.label.lower()}"
@@ -487,7 +772,7 @@ class CPGRAMSService:
         missing: list[str] = []
         if not context["state"]:
             missing.append("state_or_union_territory")
-        if not context["district"]:
+        if not (context["district"] or context["city"]):
             missing.append("district_or_city")
         if domain.needs_locality and not context["locality"]:
             missing.append("locality_or_service_location")
@@ -502,6 +787,18 @@ class CPGRAMSService:
         return missing
 
     @staticmethod
+    def _handoff_blockers(missing_information: Iterable[str]) -> list[str]:
+        """Return actionable copy for every unmet review prerequisite."""
+
+        return [
+            HANDOFF_PREREQUISITE_MESSAGES.get(
+                item,
+                f"Complete the required field: {item.replace('_', ' ')}.",
+            )
+            for item in missing_information
+        ]
+
+    @staticmethod
     def _build_draft(narrative: str, domain: DomainRule, context: dict) -> dict:
         first_sentence = re.split(r"(?<=[.!?])\s+", narrative, maxsplit=1)[0]
         first_sentence = first_sentence.rstrip(".!? ")
@@ -511,7 +808,14 @@ class CPGRAMSService:
 
         facts = [f"Citizen's description: {narrative}"]
         jurisdiction = ", ".join(
-            value for value in (context["locality"], context["district"], context["state"]) if value
+            value
+            for value in (
+                context["locality"],
+                context["city"],
+                context["district"],
+                context["state"],
+            )
+            if value
         )
         if jurisdiction:
             facts.append(f"Location/jurisdiction supplied by citizen: {jurisdiction}")

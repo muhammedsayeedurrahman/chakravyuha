@@ -17,6 +17,7 @@ from backend.config import DATA_DIR
 from backend.legal.document_drafter import DocumentDrafter, RTIContext
 from backend.models.schemas import (
     ConfidenceLevel,
+    JurisdictionCompleteness,
     KnowledgeStatus,
     Provenance,
     RTIDraftRequest,
@@ -84,12 +85,14 @@ class RTIAssistant:
 
     def identify_department(self, request: RTIIdentifyRequest) -> RTIRoutingResult:
         """Return a functional authority candidate and the information still needed."""
+        authority_hint = self._known_text(request.authority_hint)
+        road_type = self._known_text(request.road_type)
         searchable = " ".join(
             value
             for value in (
                 request.issue,
-                request.authority_hint,
-                request.road_type,
+                authority_hint,
+                road_type,
             )
             if value
         ).casefold()
@@ -106,16 +109,34 @@ class RTIAssistant:
         if best_score == 0:
             record = self.fallback
 
+        jurisdiction = JurisdictionCompleteness.from_values(
+            state=request.state,
+            district=request.district,
+            city=request.city,
+            locality=request.locality,
+            authority=request.authority_hint,
+        )
+        required_fields = record.get("required_fields", [])
         missing = [
             _FIELD_LABELS.get(field, field.replace("_", " ").capitalize())
-            for field in record.get("required_fields", [])
+            for field in required_fields
             if not self._field_is_present(field, request)
         ]
 
+        missing_jurisdiction_fields = {
+            "state": not jurisdiction.state_known,
+            "district": not jurisdiction.district_known,
+            "district_or_city": not (
+                jurisdiction.district_known or jurisdiction.city_known
+            ),
+            "locality": not jurisdiction.locality_known,
+            "state_or_central": not (
+                jurisdiction.state_known or jurisdiction.authority_known
+            ),
+        }
         jurisdiction_missing = any(
-            marker in item.casefold()
-            for item in missing
-            for marker in ("state", "district", "city", "locality", "central")
+            missing_jurisdiction_fields.get(field, False)
+            for field in required_fields
         )
         if jurisdiction_missing:
             confidence = ConfidenceLevel.REQUIRES_JURISDICTION
@@ -129,9 +150,9 @@ class RTIAssistant:
             status = KnowledgeStatus.REQUIRES_VERIFICATION
 
         likely_authority = record["likely_authority"]
-        if request.authority_hint:
+        if authority_hint:
             likely_authority = (
-                f"Citizen-provided candidate: {request.authority_hint}. Verify that this "
+                f"Citizen-provided candidate: {authority_hint}. Verify that this "
                 "public authority holds or controls the requested records before filing."
             )
 
@@ -146,6 +167,7 @@ class RTIAssistant:
             confidence=confidence,
             reason=reason,
             missing_information=missing,
+            jurisdiction_completeness=jurisdiction,
             status=status,
             source=self.metadata["official_framework_source"],
             source_url=self.metadata["official_framework_url"],
@@ -154,9 +176,12 @@ class RTIAssistant:
     def propose_information_requests(self, request: RTIIdentifyRequest) -> list[str]:
         """Transform a grievance into requests for existing records/information."""
         record = self._matching_record(request)
-        location_parts = [request.locality, request.city, request.district, request.state]
+        location_parts = (
+            self._known_text(value)
+            for value in (request.locality, request.city, request.district, request.state)
+        )
         location = ", ".join(part for part in location_parts if part) or "the specified location"
-        period = request.date_range or "the relevant period"
+        period = self._known_text(request.date_range) or "the relevant period"
         values = {
             "issue": self._clean_issue(request.issue),
             "location": location,
@@ -179,11 +204,11 @@ class RTIAssistant:
         if request.is_indian_citizen is not True:
             missing.append("Confirmation that the applicant is a citizen of India")
 
-        location = ", ".join(
-            value
+        location_parts = (
+            self._known_text(value)
             for value in (request.locality, request.city, request.district, request.state)
-            if value
         )
+        location = ", ".join(value for value in location_parts if value)
         context = RTIContext(
             applicant_name=request.applicant_name or "[Applicant name required]",
             applicant_address=request.applicant_address or "[Applicant postal address required]",
@@ -192,7 +217,7 @@ class RTIAssistant:
             subject=f"Records concerning {self._clean_issue(request.issue)}",
             information_requests=information_requests,
             location=location or "[Location/jurisdiction required]",
-            date_range=request.date_range or "the relevant period",
+            date_range=self._known_text(request.date_range) or "the relevant period",
             citizenship_statement=(
                 "I am a citizen of India."
                 if request.is_indian_citizen is True
@@ -220,7 +245,9 @@ class RTIAssistant:
     def filing_guidance(self, request: RTIIdentifyRequest | None = None) -> RTIFilingGuidance:
         """Return filing steps without treating the Central portal as a State portal."""
         request = request or RTIIdentifyRequest(issue="Request access to identifiable public records")
-        hint_text = f"{request.authority_hint or ''} {request.issue}".casefold()
+        authority_hint = self._known_text(request.authority_hint)
+        state = self._known_text(request.state)
+        hint_text = f"{authority_hint or ''} {request.issue}".casefold()
         looks_central = any(
             term in hint_text
             for term in ("central government", "union ministry", "government of india")
@@ -238,10 +265,10 @@ class RTIAssistant:
                 "Complete any fee or exemption step shown by the official channel; do not rely on an unverified fee stated by this assistant.",
                 "Keep the acknowledgement and registration details for status checks or a first appeal.",
             ]
-        elif request.state:
+        elif state:
             pathway = "state_or_ut_public_authority"
             next_step = (
-                f"Verify the relevant {request.state} public authority and its official "
+                f"Verify the relevant {state} public authority and its official "
                 "State/UT RTI filing channel or accepted offline procedure."
             )
             steps = [
@@ -291,7 +318,9 @@ class RTIAssistant:
         }
 
     def _matching_record(self, request: RTIIdentifyRequest) -> dict[str, Any]:
-        searchable = f"{request.issue} {request.authority_hint or ''} {request.road_type or ''}".casefold()
+        authority_hint = self._known_text(request.authority_hint)
+        road_type = self._known_text(request.road_type)
+        searchable = f"{request.issue} {authority_hint or ''} {road_type or ''}".casefold()
         scored = [
             (sum(keyword.casefold() in searchable for keyword in record.get("keywords", [])), record)
             for record in self.records
@@ -306,22 +335,30 @@ class RTIAssistant:
         return cleaned.rstrip("?.!")
 
     @staticmethod
+    def _known_text(value: object) -> str | None:
+        """Return trimmed citizen input only when it is substantive."""
+        if not JurisdictionCompleteness.is_known_value(value):
+            return None
+        return str(value).strip()
+
+    @staticmethod
     def _field_is_present(field: str, request: RTIIdentifyRequest) -> bool:
         values = request.model_dump()
+        known = JurisdictionCompleteness.is_known_value
         if field == "district_or_city":
-            return bool(request.district or request.city)
+            return known(request.district) or known(request.city)
         if field == "state_or_central":
-            return bool(request.state or request.authority_hint)
+            return known(request.state) or known(request.authority_hint)
         if field == "locality":
-            return bool(request.locality)
+            return known(request.locality)
         if field == "road_type_or_controlling_authority":
-            return bool(request.road_type or request.authority_hint)
+            return known(request.road_type) or known(request.authority_hint)
         if field in {
             "service_or_asset",
             "government_service_or_programme",
             "institution_or_programme",
         }:
-            return bool(request.issue)
+            return known(request.issue)
         if field in {
             "water_supplier_or_connection_details",
             "ration_card_or_fair_price_shop_details",
@@ -336,8 +373,8 @@ class RTIAssistant:
             "application_or_beneficiary_reference",
             "office_previously_contacted",
         }:
-            return bool(request.authority_hint)
-        return bool(values.get(field))
+            return known(request.authority_hint)
+        return known(values.get(field))
 
     @staticmethod
     def _filename(applicant_name: str | None) -> str:

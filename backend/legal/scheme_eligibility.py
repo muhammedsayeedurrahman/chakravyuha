@@ -68,6 +68,17 @@ class SchemeEligibilityEngine:
         }
     )
     SUPPORTED_EFFECTS = frozenset({"require", "disqualify"})
+    SUPPORTED_FIELD_TYPES = frozenset({"boolean", "integer", "number", "string"})
+    FIELD_INPUT_TYPES = {
+        "boolean": "boolean",
+        "integer": "number",
+        "number": "number",
+        "string": "text",
+    }
+    UNKNOWN_TEXT_VALUES = frozenset(
+        {"unknown", "not known", "don't know", "do not know"}
+    )
+    NOT_APPLICABLE_TEXT_VALUES = frozenset({"not applicable", "n/a", "na", "none"})
 
     def __init__(
         self,
@@ -136,6 +147,10 @@ class SchemeEligibilityEngine:
             if not isinstance(name, str) or not name.strip():
                 raise SchemeDatasetError(f"Scheme '{scheme_id}' has no valid name")
 
+            dependencies = self._validate_eligibility_schema(
+                scheme_id, scheme.get("eligibility_schema")
+            )
+
             normalised_id = self._normalise_text(scheme_id)
             if normalised_id in seen_ids:
                 raise SchemeDatasetError(f"Duplicate scheme id: {scheme_id}")
@@ -145,6 +160,7 @@ class SchemeEligibilityEngine:
                 raise SchemeDatasetError(f"Scheme '{scheme_id}' must contain eligibility_rules")
 
             seen_rule_ids: set[str] = set()
+            rule_fields: set[str] = set()
             for rule_index, rule in enumerate(rules):
                 if not isinstance(rule, Mapping):
                     raise SchemeDatasetError(
@@ -165,6 +181,7 @@ class SchemeEligibilityEngine:
                 seen_rule_ids.add(rule_id)
                 if not isinstance(field, str) or not field.strip():
                     raise SchemeDatasetError(f"Rule '{rule_id}' has no valid field")
+                rule_fields.add(field)
                 if operator not in self.SUPPORTED_OPERATORS:
                     raise SchemeDatasetError(
                         f"Rule '{rule_id}' uses unsupported operator '{operator}'"
@@ -175,6 +192,123 @@ class SchemeEligibilityEngine:
                     )
                 if "value" not in rule:
                     raise SchemeDatasetError(f"Rule '{rule_id}' has no comparison value")
+                declaration = dependencies.get(field)
+                if declaration is not None:
+                    self._validate_rule_comparison_value(
+                        rule_id=rule_id,
+                        field_type=declaration["type"],
+                        operator=operator,
+                        value=rule["value"],
+                    )
+
+            declared_fields = set(dependencies)
+            if rule_fields != declared_fields:
+                undeclared = sorted(rule_fields - declared_fields)
+                unused = sorted(declared_fields - rule_fields)
+                details: list[str] = []
+                if undeclared:
+                    details.append(f"undeclared rule fields: {', '.join(undeclared)}")
+                if unused:
+                    details.append(f"declared fields without rules: {', '.join(unused)}")
+                raise SchemeDatasetError(
+                    f"Scheme '{scheme_id}' eligibility dependencies do not match its rules "
+                    f"({'; '.join(details)})"
+                )
+
+    def _validate_eligibility_schema(
+        self, scheme_id: str, schema: Any
+    ) -> dict[str, dict[str, Any]]:
+        if not isinstance(schema, Mapping):
+            raise SchemeDatasetError(
+                f"Scheme '{scheme_id}' must contain an eligibility_schema object"
+            )
+        version = schema.get("version")
+        if not isinstance(version, str) or not version.strip():
+            raise SchemeDatasetError(
+                f"Scheme '{scheme_id}' eligibility_schema has no valid version"
+            )
+        if schema.get("additional_properties") is not False:
+            raise SchemeDatasetError(
+                f"Scheme '{scheme_id}' eligibility_schema must set additional_properties to false"
+            )
+
+        dependencies = schema.get("dependencies")
+        if not isinstance(dependencies, Mapping) or not dependencies:
+            raise SchemeDatasetError(
+                f"Scheme '{scheme_id}' eligibility_schema must declare dependencies"
+            )
+
+        validated: dict[str, dict[str, Any]] = {}
+        for field, declaration in dependencies.items():
+            if not isinstance(field, str) or not field.strip():
+                raise SchemeDatasetError(
+                    f"Scheme '{scheme_id}' eligibility_schema has an invalid dependency name"
+                )
+            if not isinstance(declaration, Mapping):
+                raise SchemeDatasetError(
+                    f"Scheme '{scheme_id}' dependency '{field}' must be an object"
+                )
+            field_type = declaration.get("type")
+            if field_type not in self.SUPPORTED_FIELD_TYPES:
+                raise SchemeDatasetError(
+                    f"Scheme '{scheme_id}' dependency '{field}' uses unsupported type "
+                    f"'{field_type}'"
+                )
+            validated[field] = dict(declaration)
+        return validated
+
+    @classmethod
+    def _validate_rule_comparison_value(
+        cls,
+        *,
+        rule_id: str,
+        field_type: str,
+        operator: str,
+        value: Any,
+    ) -> None:
+        """Fail closed when a rule comparison contradicts its declared type."""
+
+        def scalar_matches(item: Any) -> bool:
+            if field_type == "boolean":
+                return isinstance(item, bool)
+            if field_type == "integer":
+                return isinstance(item, int) and not isinstance(item, bool)
+            if field_type == "number":
+                return isinstance(item, Real) and not isinstance(item, bool)
+            if field_type == "string":
+                return isinstance(item, str)
+            return False
+
+        is_sequence = isinstance(value, Sequence) and not isinstance(
+            value,
+            (str, bytes, bytearray),
+        )
+        valid = False
+        if operator == "between_inclusive":
+            valid = (
+                field_type in {"integer", "number"}
+                and is_sequence
+                and len(value) == 2
+                and all(scalar_matches(item) for item in value)
+            )
+        elif operator in {"in", "not_in"}:
+            valid = bool(
+                is_sequence
+                and value
+                and all(scalar_matches(item) for item in value)
+            )
+        elif operator in {"gt", "gte", "lt", "lte"}:
+            valid = field_type in {"integer", "number"} and scalar_matches(value)
+        elif operator in {"contains", "not_contains"}:
+            valid = field_type == "string" and isinstance(value, str)
+        else:
+            valid = scalar_matches(value)
+
+        if not valid:
+            raise SchemeDatasetError(
+                f"Rule '{rule_id}' comparison value is incompatible with "
+                f"operator '{operator}' and declared type '{field_type}'"
+            )
 
     @property
     def metadata(self) -> dict[str, Any]:
@@ -246,6 +380,12 @@ class SchemeEligibilityEngine:
             raise ValueError("max_questions must be a non-negative integer or None")
 
         scheme = self._resolve_scheme(scheme_id)
+        dependencies = self._dependency_specs(scheme)
+        scoped_profile = {
+            field: profile[field]
+            for field in dependencies
+            if field in profile
+        }
         matched: list[dict[str, Any]] = []
         unknown: list[dict[str, Any]] = []
         disqualifiers: list[dict[str, Any]] = []
@@ -253,30 +393,37 @@ class SchemeEligibilityEngine:
 
         for rule in scheme.get("eligibility_rules", []):
             field = rule["field"]
-            value = profile.get(field)
+            value = scoped_profile.get(field)
             source_url = rule.get("source_url") or scheme.get("source_url")
             common = {
                 "rule_id": rule["id"],
                 "field": field,
                 "description": rule.get("description", ""),
                 "source_url": source_url,
+                "observed_value": deepcopy(value),
+                "expected_value": deepcopy(rule["value"]),
+                "operator": rule["operator"],
+                "effect": rule.get("effect", "require"),
             }
 
-            if self._is_missing(value):
+            missing_reason = self._missing_reason(value)
+            if missing_reason is not None:
                 unknown.append(
                     {
                         **common,
-                        "reason": "missing",
+                        "reason": missing_reason,
                         "explanation": rule.get(
                             "unknown_message", f"A value for '{field}' is required."
                         ),
                         "question": rule.get("question", f"Please provide {field}."),
+                        "input_type": self._input_type(dependencies[field]["type"]),
                         "priority": self._priority(rule),
                     }
                 )
                 continue
 
             try:
+                value = self._validate_profile_value(dependencies[field]["type"], value)
                 condition_matches = self._evaluate_operator(
                     rule["operator"], value, rule["value"]
                 )
@@ -292,6 +439,7 @@ class SchemeEligibilityEngine:
                             + " The supplied value could not be interpreted for this rule."
                         ),
                         "question": rule.get("question", f"Please provide {field}."),
+                        "input_type": self._input_type(dependencies[field]["type"]),
                         "priority": self._priority(rule),
                     }
                 )
@@ -397,6 +545,38 @@ class SchemeEligibilityEngine:
                 return scheme
         raise SchemeNotFoundError(f"Unknown scheme: {identifier}")
 
+    @staticmethod
+    def _dependency_specs(scheme: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
+        schema = scheme["eligibility_schema"]
+        return {
+            field: dict(declaration)
+            for field, declaration in schema["dependencies"].items()
+        }
+
+    @classmethod
+    def _validate_profile_value(cls, field_type: str, value: Any) -> Any:
+        if field_type == "boolean":
+            if type(value) is not bool:
+                raise RuleEvaluationError("profile value must be a boolean")
+            return value
+        if field_type == "integer":
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise RuleEvaluationError("profile value must be an integer")
+            return value
+        if field_type == "number":
+            if isinstance(value, bool) or not isinstance(value, Real):
+                raise RuleEvaluationError("profile value must be numeric")
+            return value
+        if field_type == "string":
+            if not isinstance(value, str):
+                raise RuleEvaluationError("profile value must be a string")
+            return value
+        raise RuleEvaluationError(f"unsupported declared field type '{field_type}'")
+
+    @classmethod
+    def _input_type(cls, field_type: str) -> str:
+        return cls.FIELD_INPUT_TYPES[field_type]
+
     @classmethod
     def _evaluate_operator(cls, operator: str, actual: Any, expected: Any) -> bool:
         if operator == "eq":
@@ -457,9 +637,24 @@ class SchemeEligibilityEngine:
             raise RuleEvaluationError(f"{label} must be numeric")
         return value
 
-    @staticmethod
-    def _is_missing(value: Any) -> bool:
-        return value is None or (isinstance(value, str) and not value.strip())
+    @classmethod
+    def _missing_reason(cls, value: Any) -> str | None:
+        if value is None or (isinstance(value, str) and not value.strip()):
+            return "missing"
+        if isinstance(value, str):
+            normalised = " ".join(
+                value.strip()
+                .casefold()
+                .strip(".,;:!?")
+                .replace("_", " ")
+                .replace("-", " ")
+                .split()
+            )
+            if normalised in cls.UNKNOWN_TEXT_VALUES:
+                return "unknown"
+            if normalised in cls.NOT_APPLICABLE_TEXT_VALUES:
+                return "not_applicable"
+        return None
 
     @staticmethod
     def _normalise_text(value: Any) -> str:
@@ -537,6 +732,7 @@ class SchemeEligibilityEngine:
                     "field": item["field"],
                     "question": item["question"],
                     "reason": item["reason"],
+                    "input_type": item["input_type"],
                 }
             )
             if max_questions is not None and len(questions) >= max_questions:

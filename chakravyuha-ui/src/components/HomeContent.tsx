@@ -14,6 +14,7 @@ import { Card } from "@/components/Card";
 import { ComplaintDraftCard } from "@/components/ComplaintDraftCard";
 import { OpenClawCard } from "@/components/OpenClawCard";
 import { CivicAssistant, type CivicFilingHandoff, type CivicJourney } from "@/components/CivicAssistant";
+import type { CivicWorkflowLaunch } from "@/lib/civicWorkflowHandoff";
 import { Preloader } from "@/components/Preloader";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { CurtainTransition } from "@/components/CurtainTransition";
@@ -28,6 +29,8 @@ export default function HomeContent() {
   const [loaded, setLoaded] = useState(false);
   const [showCurtain, setShowCurtain] = useState(false);
   const [civicJourney, setCivicJourney] = useState<CivicJourney>("rti");
+  const [civicContext, setCivicContext] = useState<CivicWorkflowLaunch | null>(null);
+  const [civicLaunchVersion, setCivicLaunchVersion] = useState(0);
   const [filingHandoff, setFilingHandoff] = useState<{ portalId: string; userData: Record<string, string> } | null>(null);
   const prevTabRef = useRef("home");
 
@@ -58,6 +61,16 @@ export default function HomeContent() {
 
   const handleOpenCivic = useCallback((journey: CivicJourney = "rti") => {
     setCivicJourney(journey);
+    setCivicContext(null);
+    setCivicLaunchVersion((version) => version + 1);
+    handleTabChange("civic");
+  }, [handleTabChange]);
+
+  const handleChatCivicHandoff = useCallback((launch: CivicWorkflowLaunch) => {
+    setChatOpen(false);
+    setCivicJourney(launch.journey);
+    setCivicContext(launch);
+    setCivicLaunchVersion((version) => version + 1);
     handleTabChange("civic");
   }, [handleTabChange]);
 
@@ -70,6 +83,14 @@ export default function HomeContent() {
     setFilingHandoff(handoff);
     handleTabChange("file");
   }, [handleTabChange]);
+
+  const handleCivicLegalHandoff = useCallback((target: "chat" | "draft") => {
+    if (target === "chat") {
+      handleStartChat();
+      return;
+    }
+    handleTabChange("draft");
+  }, [handleStartChat, handleTabChange]);
 
   if (!loaded) {
     return <Preloader onComplete={() => setLoaded(true)} />;
@@ -98,9 +119,11 @@ export default function HomeContent() {
         ) : activeTab === "civic" ? (
           <ErrorBoundary>
             <CivicAssistant
-              key={civicJourney}
+              key={`${civicJourney}-${civicLaunchVersion}`}
               initialJourney={civicJourney}
+              initialContext={civicContext}
               onOpenClaw={handleCivicFilingHandoff}
+              onOpenLegal={handleCivicLegalHandoff}
             />
           </ErrorBoundary>
         ) : activeTab === "draft" ? (
@@ -165,7 +188,11 @@ export default function HomeContent() {
       </main>
 
       <BottomTabNav activeTab={activeTab} onTabChange={handleTabChange} />
-      <ChatModal open={chatOpen} onClose={() => { setChatOpen(false); setActiveTab("home"); prevTabRef.current = "home"; }} />
+      <ChatModal
+        open={chatOpen}
+        onClose={() => { setChatOpen(false); setActiveTab("home"); prevTabRef.current = "home"; }}
+        onOpenCivic={handleChatCivicHandoff}
+      />
     </div>
   );
 }

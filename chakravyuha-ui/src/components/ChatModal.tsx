@@ -5,6 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { smartQuery, type SmartResponse } from "@/services/api";
 import { useApp } from "@/context/AppContext";
 import { Logo } from "@/components/Logo";
+import {
+  civicJourneyForResponse,
+  createCivicWorkflowLaunch,
+  resolveAutomaticCivicHandoff,
+  type CivicJourney,
+  type CivicWorkflowLaunch,
+} from "@/lib/civicWorkflowHandoff";
 
 const QUICK_CHIPS = [
   "My license is lost",
@@ -41,11 +48,26 @@ interface ChatMessage {
   role: "user" | "ai";
   text: string;
   smartData?: SmartResponse;
+  requestNarrative?: string;
 }
 
 interface ChatModalProps {
   open: boolean;
   onClose: () => void;
+  onOpenCivic?: (launch: CivicWorkflowLaunch) => void;
+}
+
+const CIVIC_JOURNEY_LABELS: Record<CivicJourney, string> = {
+  rti: "RTI Assistant",
+  cpgrams: "CPGRAMS Assistant",
+  schemes: "Scheme Eligibility",
+  rights: "Rights Navigator",
+};
+
+function needsCategoryPicker(data: SmartResponse | undefined): boolean {
+  return Boolean(
+    data && !civicJourneyForResponse(data) && (data.scenario === "unknown" || !data.guidance)
+  );
 }
 
 // ── Fallback categories when classifier returns "unknown" ────────────────────
@@ -103,9 +125,20 @@ function CategoryPicker({ onSelect, disabled }: { onSelect: (query: string) => v
 }
 
 // ── Structured response card ────────────────────────────────────────────────
-function ResponseCard({ data }: { data: SmartResponse }) {
+function ResponseCard({
+  data,
+  narrative,
+  language,
+  onOpenCivic,
+}: {
+  data: SmartResponse;
+  narrative: string;
+  language: string;
+  onOpenCivic?: (launch: CivicWorkflowLaunch) => void;
+}) {
   const [showDraft, setShowDraft] = useState(false);
   const sev = SEVERITY[data.severity] || SEVERITY.medium;
+  const manualLaunch = createCivicWorkflowLaunch(data, narrative, language);
 
   return (
     <div
@@ -159,6 +192,21 @@ function ResponseCard({ data }: { data: SmartResponse }) {
           <span className="font-semibold" style={{ color: "var(--color-primary)" }}>Likely Outcome: </span>
           <span style={{ color: "var(--color-text)" }}>{data.outcome}</span>
         </div>
+      )}
+
+      {manualLaunch && onOpenCivic && (
+        <button
+          type="button"
+          onClick={() => onOpenCivic(manualLaunch)}
+          className="w-full rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
+          style={{
+            background: "var(--color-primary-dim)",
+            color: "var(--color-primary)",
+            border: "1px solid var(--color-primary)",
+          }}
+        >
+          Continue to {CIVIC_JOURNEY_LABELS[manualLaunch.journey]}
+        </button>
       )}
 
       {/* Complaint draft */}
@@ -250,7 +298,7 @@ function ResponseCard({ data }: { data: SmartResponse }) {
   );
 }
 
-export function ChatModal({ open, onClose }: ChatModalProps) {
+export function ChatModal({ open, onClose, onOpenCivic }: ChatModalProps) {
   const { state } = useApp();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -275,8 +323,17 @@ export function ChatModal({ open, onClose }: ChatModalProps) {
 
         setMessages((prev) => [
           ...prev,
-          { role: "ai", text: "", smartData: res },
+          { role: "ai", text: "", smartData: res, requestNarrative: trimmed },
         ]);
+
+        const automaticLaunch = resolveAutomaticCivicHandoff(
+          res,
+          trimmed,
+          state.language.code,
+        );
+        if (automaticLaunch && onOpenCivic) {
+          onOpenCivic(automaticLaunch);
+        }
       } catch (err) {
         console.error("Chat query error:", err);
         setMessages((prev) => [
@@ -287,7 +344,7 @@ export function ChatModal({ open, onClose }: ChatModalProps) {
         setIsLoading(false);
       }
     },
-    [isLoading, state.language.code]
+    [isLoading, state.language.code, onOpenCivic]
   );
 
   return (
@@ -363,10 +420,15 @@ export function ChatModal({ open, onClose }: ChatModalProps) {
                     >
                       {m.text}
                     </div>
-                  ) : m.smartData?.scenario === "unknown" || (m.smartData && !m.smartData.guidance) ? (
+                  ) : needsCategoryPicker(m.smartData) ? (
                     <CategoryPicker onSelect={send} disabled={isLoading} />
                   ) : m.smartData ? (
-                    <ResponseCard data={m.smartData} />
+                    <ResponseCard
+                      data={m.smartData}
+                      narrative={m.requestNarrative ?? ""}
+                      language={state.language.code}
+                      onOpenCivic={onOpenCivic}
+                    />
                   ) : (
                     <div
                       className="rounded-2xl rounded-bl-sm px-4 py-2.5 text-sm whitespace-pre-line border-l-2"

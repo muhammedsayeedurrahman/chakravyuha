@@ -18,8 +18,11 @@ from backend.agent.intent_classifier import (
     INTENT_GREETING,
     INTENT_GUIDED_FLOW,
     INTENT_RTI,
+    INTENT_RIGHTS_GUIDANCE,
     INTENT_SCHEME_ELIGIBILITY,
     INTENT_SECTION_LOOKUP,
+    IntentResult,
+    civic_handoff_for,
     classify_intent,
 )
 from backend.agent.retrieval_agent import RetrievalAgent
@@ -138,9 +141,10 @@ class Orchestrator:
             INTENT_SCHEME_ELIGIBILITY,
             INTENT_CPGRAMS,
             INTENT_CIVIC_QUERY,
+            INTENT_RIGHTS_GUIDANCE,
         }:
             return self._handle_civic_handoff(
-                intent.intent, text, language, session_state
+                intent, text, language, session_state
             )
 
         # Default: legal query (also handles followup, general)
@@ -152,47 +156,24 @@ class Orchestrator:
 
     def _handle_civic_handoff(
         self,
-        intent_name: str,
+        intent: IntentResult,
         text: str,
         language: str,
         session_state: dict,
     ) -> dict:
         """Return a typed handoff instead of sending civic issues to criminal RAG."""
-        handoffs = {
-            INTENT_RTI: {
-                "journey": "rti",
-                "handler": "rti_assistant",
-                "message": (
-                    "Continue in the RTI assistant. It will identify missing jurisdiction "
-                    "details, propose record-focused questions, and show authority uncertainty."
-                ),
-            },
-            INTENT_SCHEME_ELIGIBILITY: {
-                "journey": "scheme_eligibility",
-                "handler": "scheme_eligibility",
-                "message": (
-                    "Continue in the scheme eligibility assistant for a deterministic, "
-                    "explainable check against sourced rules."
-                ),
-            },
-            INTENT_CPGRAMS: {
-                "journey": "cpgrams",
-                "handler": "cpgrams_assistant",
-                "message": (
-                    "Continue in the CPGRAMS grievance assistant to classify, complete, "
-                    "and review the grievance before any human-confirmed portal action."
-                ),
-            },
-            INTENT_CIVIC_QUERY: {
-                "journey": "civic",
-                "handler": "civic_legal_query",
-                "message": (
-                    "Continue in the civic/legal assistant. Authority and pathway depend "
-                    "on jurisdiction and will be marked uncertain when they require verification."
-                ),
-            },
-        }
-        handoff = handoffs[intent_name]
+        handoff = civic_handoff_for(intent)
+        if handoff is None and intent.intent == INTENT_CIVIC_QUERY:
+            handoff = civic_handoff_for(
+                IntentResult(
+                    intent=INTENT_CPGRAMS,
+                    confidence=intent.confidence,
+                    method=intent.method,
+                    entities={"journey": "cpgrams", "workflow": "cpgrams"},
+                )
+            )
+        if handoff is None:
+            return self._handle_legal_query(text, language, session_state)
         response = self._build_response(
             handoff["message"], [], language, session_state, text
         )
