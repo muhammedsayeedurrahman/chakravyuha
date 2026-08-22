@@ -875,7 +875,13 @@ function SchemeSummaryCard({ scheme }: { scheme: SchemeSummary }) {
 
 function cpgramsDraftText(draft: CPGRAMSDraft | CPGRAMSPrepareResponse["draft"]): string {
   if (!draft) return "";
-  if ("grievance_text" in draft) return draft.grievance_text;
+  if ("grievance_text" in draft && typeof draft.grievance_text === "string") {
+  return draft.grievance_text;
+}
+
+if ("formatted_text" in draft && typeof draft.formatted_text === "string") {
+  return draft.formatted_text;
+}
   return draft.formatted_text;
 }
 
@@ -1163,7 +1169,11 @@ function RightsNavigator() {
             <Card.Body>
               <div className="space-y-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <SectionTitle eyebrow={result.domain || "Civic guidance"} title={result.jurisdiction || "Jurisdiction not established"} description={`Status: ${(result.status || "requires verification").replace(/_/g, " ")}`} />
+                  <SectionTitle
+  eyebrow={result.domain || "Civic guidance"}
+  title={metadataText(result.jurisdiction) || "Jurisdiction not established"}
+  description={`Status: ${(result.status || "requires verification").replace(/_/g, " ")}`}
+/>
                   <ConfidenceBadge confidence={result.confidence} />
                 </div>
                 <MissingInformation items={result.missing_information} />
