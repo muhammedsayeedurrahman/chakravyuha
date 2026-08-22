@@ -1,6 +1,6 @@
 # Chakravyuha MVP Quick Start Guide
-**Version**: Phase 1 MVP  
-**Last Updated**: 2026-03-24
+**Version**: Civic and legal action assistant  
+**Last Updated**: 2026-08-20
 
 ---
 
@@ -8,17 +8,17 @@
 
 ### 1. Clone & Setup
 ```bash
-cd c:\code\HINDSIGHT
+cd chakravyuha-main
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
 # Download browser for automation (optional for MVP)
 playwright install
 ```
 
 ### 2. Prepare Environment Variables
-Create `.env` file in `c:\code\HINDSIGHT`:
+Create `.env` in the repository root:
 ```bash
 # Sarvam AI (get free API key from https://console.sarvam.ai)
 SARVAM_API_KEY=sk_your_key_here
@@ -37,16 +37,14 @@ ASR_ACCEPT_THRESHOLD=0.85
 ASR_CONFIRM_THRESHOLD=0.75
 ```
 
-### 3. Build Legal Corpus (One-time)
+### 3. Optional legacy criminal vector index
 ```bash
-# Scrapes IPC/BNS sections and builds ChromaDB index
-python -m backend.legal.corpus_loader
-
-# This downloads:
-# - IndicWhisper model (~500MB)
-# - InLegalBERT embeddings (~400MB)
-# - Creates: chromadb/ folder with indexed sections
+# Requires the full optional dependencies. The sourced civic workflows do not
+# require ChromaDB.
+python scripts/build_vectordb.py
 ```
+
+The repository audit found conflicts in the legacy criminal source/mapping files. Read `data/corpus_integrity_status.json` and verify criminal-law output against current India Code material before relying on it.
 
 ### 4. Start FastAPI Server
 ```bash
@@ -62,7 +60,33 @@ Server will start at: `http://localhost:8000`
 **Check it's working**:
 ```bash
 curl http://localhost:8000/health
-# Output: {"status":"healthy","rag_ready":true,"rag_sections":1234}
+# Output: {"status":"healthy"}
+```
+
+### 5. Start the integrated frontend
+
+```bash
+cd chakravyuha-ui
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000`, choose **Civic Assistant**, and select RTI, Schemes, CPGRAMS, Consumer, Tenant, or Labour.
+
+### Civic API smoke checks
+
+```bash
+curl -X POST http://localhost:8000/api/rti/identify-department \
+  -H "Content-Type: application/json" \
+  -d '{"issue":"The municipal road has not been repaired for two years"}'
+
+curl -X POST http://localhost:8000/api/schemes/guided-check \
+  -H "Content-Type: application/json" \
+  -d '{"profile":{},"max_questions":3}'
+
+curl -X POST http://localhost:8000/api/legal/domains/query \
+  -H "Content-Type: application/json" \
+  -d '{"query":"My landlord threatens eviction","domain":"tenant"}'
 ```
 
 ---

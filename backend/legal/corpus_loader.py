@@ -16,6 +16,8 @@ from typing import Optional
 import requests
 from bs4 import BeautifulSoup
 
+from backend.config import DATA_DIR
+
 logger = logging.getLogger("chakravyuha.legal.corpus")
 
 
@@ -42,10 +44,34 @@ class Section:
         return asdict(self)
 
 
+@dataclass(frozen=True)
+class CivicRecord:
+    """Provenance-preserving consumer, tenant, or labour knowledge record."""
+
+    id: str
+    domain: str
+    title: str
+    summary: str
+    guidance: list[str]
+    keywords: list[str]
+    jurisdiction: str
+    source: str
+    source_url: str
+    effective_date: Optional[str]
+    last_verified: str
+    source_type: str
+    document_type: str
+    status: str
+
+    def to_dict(self) -> dict:
+        """Convert to a searchable dictionary without dropping metadata."""
+        return asdict(self)
+
+
 class CorpusLoader:
     """Load and process legal corpus from indiacode.nic.in."""
 
-    BASE_URL = "https://indiacode.nis.gov.in"
+    BASE_URL = "https://www.indiacode.nic.in"
     IPC_URL = f"{BASE_URL}/show-data?actid=4&sectionid=1&searchurl=section"
     BNS_URL = f"{BASE_URL}/show-data?actid=49&sectionid=1&searchurl=section"
 
@@ -255,6 +281,29 @@ class CorpusLoader:
         sections = [Section(**item) for item in data]
         logger.info(f"Loaded {len(sections)} sections from {input_file}")
         return sections
+
+    @staticmethod
+    def load_civic_records(input_file: Path | None = None) -> list[CivicRecord]:
+        """Load domain-separated civic records and require provenance fields."""
+        path = input_file or DATA_DIR / "civic_legal_corpus.json"
+        with path.open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+
+        records: list[CivicRecord] = []
+        allowed_domains = {"consumer", "tenant", "labour"}
+        allowed_statuses = {"verified", "requires_verification", "requires_jurisdiction"}
+        for item in payload.get("records", []):
+            if item.get("domain") not in allowed_domains:
+                raise ValueError(f"Unsupported civic domain for {item.get('id', '<unknown>')}")
+            if item.get("status") not in allowed_statuses:
+                raise ValueError(f"Invalid verification status for {item.get('id', '<unknown>')}")
+            for required in ("source", "source_url", "jurisdiction", "last_verified", "source_type"):
+                if not item.get(required):
+                    raise ValueError(f"Civic record {item.get('id', '<unknown>')} lacks {required}")
+            records.append(CivicRecord(**item))
+
+        logger.info("Loaded %d provenance-aware civic records from %s", len(records), path)
+        return records
 
 
 def build_corpus():

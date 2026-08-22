@@ -49,8 +49,10 @@ SARVAM_LLM_MODEL = os.getenv("SARVAM_LLM_MODEL", "sarvam-m")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
 # ── ASR Confidence Tiers ───────────────────────────────────────────────────
-ASR_ACCEPT_THRESHOLD = 0.5
-ASR_CONFIRM_THRESHOLD = 0.2
+# Keep these aligned with the voice pipeline's documented acceptance tiers.
+# A middling transcript should be confirmed or retried, not silently accepted.
+ASR_ACCEPT_THRESHOLD = 0.85
+ASR_CONFIRM_THRESHOLD = 0.75
 
 # ── Supported Languages ───────────────────────────────────────────────────
 SUPPORTED_LANGUAGES = {

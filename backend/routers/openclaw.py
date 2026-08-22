@@ -1,9 +1,11 @@
-"""OpenClaw router — async government portal form filing API.
+"""OpenClaw router — human-gated government portal form filing API.
 
 Action space (agent harness pattern):
   POST /api/openclaw/file          → start filing (returns session_id immediately)
   GET  /api/openclaw/status/{id}   → poll progress, steps, OTP status
   POST /api/openclaw/otp           → submit OTP to unblock paused flow
+  POST /api/openclaw/captcha       → manually enter a displayed CAPTCHA
+  POST /api/openclaw/confirm       → consent to the exact pending payload
   GET  /api/openclaw/portals       → list supported portals
 """
 
@@ -12,7 +14,7 @@ from __future__ import annotations
 import logging
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend.agent.openclaw.orchestrator import get_openclaw
 
@@ -38,6 +40,21 @@ class OTPSubmitRequest(BaseModel):
     otp: str
 
 
+class CaptchaSubmitRequest(BaseModel):
+    """Manual response to a CAPTCHA displayed by the portal."""
+
+    session_id: str
+    captcha_text: str = Field(min_length=1, max_length=64)
+
+
+class ConfirmationSubmitRequest(BaseModel):
+    """Explicit consent bound to the exact pending portal payload."""
+
+    session_id: str
+    payload_digest: str = Field(min_length=64, max_length=64)
+    confirmed: bool
+
+
 # ── Endpoints ─────────────────────────────────────────────────────────────
 
 @router.get("/portals")
@@ -49,9 +66,10 @@ async def list_portals() -> list[dict]:
 
 @router.post("/file")
 async def start_filing(request: FilingRequest) -> dict:
-    """Start autonomous form filing — returns immediately with session_id.
+    """Start assisted form filing — returns immediately with session_id.
 
-    The filing runs in the background. Poll /status/{session_id} for progress.
+    The background flow pauses for CAPTCHA, OTP, and explicit payload-bound
+    confirmation before every action that transmits user data.
     """
     openclaw = get_openclaw()
 
@@ -134,4 +152,56 @@ async def submit_otp(request: OTPSubmitRequest) -> dict:
         "success": False,
         "message": "No pending OTP request for this session.",
         "next_actions": ["Check session_id is correct, or filing may have timed out"],
+    }
+
+
+@router.post("/captcha")
+async def submit_captcha(request: CaptchaSubmitRequest) -> dict:
+    """Provide a CAPTCHA value read and entered by the citizen.
+
+    OpenClaw never attempts to solve, bypass, or infer CAPTCHA values.
+    """
+    openclaw = get_openclaw()
+    success = openclaw.captcha_gate.submit(
+        request.session_id, request.captcha_text
+    )
+    if success:
+        return {
+            "success": True,
+            "message": "CAPTCHA accepted for entry; the filing flow is resuming.",
+            "next_actions": ["Poll GET /api/openclaw/status/{session_id} for progress"],
+        }
+    return {
+        "success": False,
+        "message": "No pending CAPTCHA request for this session.",
+        "next_actions": ["Poll the session and enter only the current CAPTCHA"],
+    }
+
+
+@router.post("/confirm")
+async def confirm_external_action(request: ConfirmationSubmitRequest) -> dict:
+    """Approve or decline the exact payload shown in ``pending_action``.
+
+    The digest must match the current pending action. A confirmation cannot be
+    reused if the portal, step, form payload, or document list changes.
+    """
+    openclaw = get_openclaw()
+    success = openclaw.confirmation_gate.submit(
+        session_id=request.session_id,
+        payload_digest=request.payload_digest,
+        confirmed=request.confirmed,
+    )
+    if success:
+        action = "approved" if request.confirmed else "declined"
+        return {
+            "success": True,
+            "message": f"Pending external action {action}.",
+            "next_actions": ["Poll GET /api/openclaw/status/{session_id} for result"],
+        }
+    return {
+        "success": False,
+        "message": "No matching pending action; the digest may be stale or incorrect.",
+        "next_actions": [
+            "Poll the session and review its current pending_action and payload_digest"
+        ],
     }

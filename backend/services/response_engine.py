@@ -468,22 +468,18 @@ SCENARIOS: dict[str, LegalResponse] = {
         scenario="tenant_landlord",
         title="Tenant-Landlord Dispute",
         guidance=(
-            "Key rights:\n\n"
-            "Tenant rights:\n"
-            "- Cannot be evicted without court order\n"
-            "- Security deposit must be returned (minus damages)\n"
-            "- Rent cannot be increased arbitrarily\n\n"
-            "Landlord rights:\n"
-            "- Can seek eviction for non-payment (after notice)\n"
-            "- Can seek eviction for personal use\n"
-            "- Entitled to fair market rent\n\n"
-            "Both: File case in Rent Control Court"
+            "Tenant and landlord rules vary by State or Union Territory, the "
+            "type of premises, the agreement, and the facts. Do not assume a "
+            "universal eviction, notice, deposit, or rent-control rule.\n\n"
+            "Next steps:\n"
+            "1. Provide the State or Union Territory and city\n"
+            "2. Preserve the tenancy agreement, payment records, notices, and messages\n"
+            "3. Use the tenant-domain assistant for sourced, jurisdiction-filtered guidance\n"
+            "4. Any forum, deadline, or notice-period answer requires verification "
+            "unless an applicable source is shown"
         ),
-        sections=[
-            "State Rent Control Act (varies by state)",
-            "Transfer of Property Act Section 106 (Notice period)",
-        ],
-        outcome="Eviction requires court order. Rent disputes resolved by Rent Controller.",
+        sections=["Applicable State/UT tenancy law — requires verification"],
+        outcome="No outcome can be predicted until the jurisdiction, tenancy type, agreement, and notice history are known.",
         severity="low",
     ),
     "inheritance": LegalResponse(
@@ -513,75 +509,110 @@ SCENARIOS: dict[str, LegalResponse] = {
         scenario="consumer_complaint",
         title="Consumer Complaint",
         guidance=(
-            "What to do:\n\n"
-            "1. First: Send written complaint to the company/seller\n"
-            "2. If no response in 15 days: File on consumerhelpline.gov.in\n"
-            "3. Call 1800-11-4000 (National Consumer Helpline)\n"
-            "4. File case on edaakhil.nic.in (e-filing for consumer courts)\n\n"
-            "Where to file:\n"
-            "- Up to Rs 1 crore: District Commission\n"
-            "- Rs 1-10 crore: State Commission\n"
-            "- Above Rs 10 crore: National Commission"
+            "Consumer forum, jurisdiction, filing method, and current limits must be "
+            "checked against current official sources.\n\n"
+            "Next steps:\n"
+            "1. Preserve the invoice, warranty or terms, payment proof, photos, and messages\n"
+            "2. Record what went wrong and the remedy already requested\n"
+            "3. Send a dated written representation to the seller or service provider\n"
+            "4. Use the consumer-domain assistant to review sourced pathways and any "
+            "conditions still marked as unknown or requiring verification"
         ),
-        sections=[
-            "Consumer Protection Act 2019",
-            "Section 35 (Product liability)",
-        ],
-        outcome="Consumer courts are faster than civil courts. Compensation + refund + damages can be awarded.",
+        sections=["Consumer Protection Act, 2019 — applicability and current procedure require verification"],
+        outcome="No outcome is predicted; the available remedy depends on the transaction, evidence, jurisdiction, and current rules.",
         severity="low",
         complaint_draft=(
-            "To,\nThe President\nDistrict Consumer Disputes Redressal Commission\n[District, State]\n\n"
-            "Subject: Consumer Complaint\n\n"
-            "Complainant: [Your name and address]\n"
-            "Opposite Party: [Company/seller name and address]\n\n"
+            "To: [Seller or service provider]\n\n"
+            "Subject: Request for resolution of a consumer issue\n\n"
+            "From: [Your name and contact details]\n"
+            "Transaction: [Product/service, date, amount, reference number]\n\n"
             "Facts:\n"
             "1. I purchased [product/service] on [date] for Rs [amount]\n"
             "2. The [product/service] was [defective/not as described/overcharged]\n"
             "3. I complained to the seller on [date] but received no resolution\n\n"
-            "Relief Sought:\n"
-            "1. Replacement / Refund of Rs [amount]\n"
-            "2. Compensation for mental agony: Rs [amount]\n"
-            "3. Cost of litigation\n\n"
-            "Attached: [Receipt, photos, complaint copies]\n\n"
-            "Date: [date]\nSignature: [your name]"
+            "Resolution requested: [Describe the specific resolution]\n\n"
+            "Attached: [Invoice, photos, terms, and earlier communications]\n\n"
+            "Date: [date]\nSignature: [your name]\n\n"
+            "This is a representation for review, not a verified filing for a particular forum."
         ),
-        helplines=["1800-11-4000 (Consumer Helpline)"],
     ),
     "employment_issue": LegalResponse(
         scenario="employment_issue",
         title="Employment / Salary Issue",
         guidance=(
-            "What to do:\n\n"
-            "1. Send written notice to employer demanding unpaid wages\n"
-            "2. File complaint with Labour Commissioner\n"
-            "3. For PF issues: File on epfigms.gov.in\n"
-            "4. For unfair termination: Challenge within 3 months\n"
-            "5. Labour courts handle disputes for workers\n"
-            "6. Industrial Tribunal for establishment-level disputes"
+            "The applicable labour pathway depends on the work location, worker and "
+            "establishment classification, sector, issue, and relevant dates.\n\n"
+            "Next steps:\n"
+            "1. Preserve the contract or appointment letter, wage records, attendance, "
+            "notices, and communications\n"
+            "2. Provide the State or Union Territory, establishment type, employment "
+            "type, and the dates of the disputed events\n"
+            "3. Use the labour-domain assistant for sourced guidance\n"
+            "4. Verify the responsible authority, remedy, and any deadline before filing"
         ),
-        sections=[
-            "Payment of Wages Act 1936",
-            "Industrial Disputes Act 1947",
-            "EPF Act 1952 (Provident Fund)",
-        ],
-        outcome="Labour Commissioner can order payment. Unfair termination can lead to reinstatement + back wages.",
+        sections=["Applicable central and State/UT labour law — requires verification"],
+        outcome="No outcome is predicted until the employment relationship, jurisdiction, evidence, and applicable current law are established.",
         severity="medium",
     ),
     "rti": LegalResponse(
         scenario="rti",
         title="Right to Information (RTI)",
         guidance=(
-            "How to file RTI:\n\n"
-            "1. Online: rtionline.gov.in (for central government)\n"
-            "2. Offline: Write on plain paper to the PIO of the department\n"
-            "3. Fee: Rs 10 (online) or postal order\n"
-            "4. Response deadline: 30 days (48 hours for life/liberty matters)\n"
-            "5. If no response: Appeal to First Appellate Authority\n"
-            "6. If still no response: Appeal to Information Commission"
+            "An RTI request should seek identifiable existing records or information, "
+            "rather than simply restating a grievance. The correct public authority "
+            "and filing channel depend on jurisdiction and who controls the records.\n\n"
+            "Next steps:\n"
+            "1. Describe the underlying information need and relevant period\n"
+            "2. Provide the State, district or city, locality, and known office or department\n"
+            "3. Use the RTI assistant to turn the issue into concrete record requests\n"
+            "4. Review the likely authority, confidence, draft, and sourced filing guidance\n"
+            "5. Verify fees, procedure, and authority where the assistant marks them uncertain"
         ),
-        sections=["Right to Information Act 2005"],
-        outcome="Government must respond within 30 days or face penalty. "
-                "Rs 250/day fine on PIO for delay.",
+        sections=["Right to Information Act, 2005 — applicable rules and authority require verification"],
+        outcome="The authority and filing route cannot be finalized until the jurisdiction and record-holding public authority are identified.",
+        severity="low",
+    ),
+    "scheme_eligibility": LegalResponse(
+        scenario="scheme_eligibility",
+        title="Government Scheme Eligibility",
+        guidance=(
+            "Use the scheme eligibility assistant for a deterministic check against "
+            "the sourced rules in its verified dataset. It reports matched conditions, "
+            "unknown conditions, and potential disqualifiers without inventing a numeric score.\n\n"
+            "Answer only the targeted profile questions required by the selected scheme, "
+            "then review the official source and any conditions marked as unknown."
+        ),
+        sections=[],
+        outcome="Eligibility remains undetermined until all mandatory scheme-specific conditions are evaluated against current official rules.",
+        severity="low",
+    ),
+    "cpgrams": LegalResponse(
+        scenario="cpgrams",
+        title="CPGRAMS Government Grievance",
+        guidance=(
+            "Use the CPGRAMS grievance assistant to classify the issue, identify missing "
+            "facts, prepare a structured draft, and review the likely department or category.\n\n"
+            "Any portal action requires the citizen's explicit confirmation. Login, OTP, "
+            "CAPTCHA, consent, authentication, and identity checks must not be bypassed. "
+            "A draft is not the same as a submitted or tracked grievance."
+        ),
+        sections=[],
+        outcome="No submission or tracking status exists until the citizen completes the official portal process.",
+        severity="low",
+    ),
+    "civic_service": LegalResponse(
+        scenario="civic_service",
+        title="Civic Service Issue",
+        guidance=(
+            "The responsible authority may depend on the State, district, city or village, "
+            "locality, asset or service type, and controlling office. Provide those details "
+            "before relying on an authority suggestion.\n\n"
+            "Use an RTI workflow when you need existing records or information, and a "
+            "grievance workflow when you seek service resolution. Any uncertain authority "
+            "must be shown as requiring clarification or verification."
+        ),
+        sections=[],
+        outcome="The next pathway cannot be finalized until jurisdiction and the responsible public authority are clarified.",
         severity="low",
     ),
 

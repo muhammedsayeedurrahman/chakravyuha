@@ -6,5 +6,6 @@
   },
   "FIR": "First Information Report template - handles criminal complaints",
   "LEGAL_NOTICE": "Legal notice template - formal warning before escalation",
-  "COMPLAINT": "Complaint petition template - civil/consumer matters"
+  "COMPLAINT": "Complaint petition template - existing generic complaint format",
+  "RTI_APPLICATION": "Information-request template addressed to the Public Information Officer; authority and jurisdiction must be verified before filing"
 }

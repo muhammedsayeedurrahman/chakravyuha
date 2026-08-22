@@ -1,0 +1,162 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "Non-authoritative functional hints for finding the public authority likely to hold requested records. These are not PIO directories or jurisdiction determinations.",
+    "last_verified": "2026-08-20",
+    "status": "requires_verification",
+    "official_framework_source": "The Right to Information Act, 2005, sections 6 and 7",
+    "official_framework_url": "https://www.indiacode.nic.in/bitstream/123456789/15691/1/rti_act_2005.pdf"
+  },
+  "records": [
+    {
+      "id": "roads_public_works",
+      "domain": "Roads / public works",
+      "keywords": ["road", "street", "pothole", "footpath", "bridge", "highway", "repair", "resurface", "contractor", "work order"],
+      "authority_type": "Road-owning public authority",
+      "likely_authority": "The local body, State public works/roads authority, highway authority, or other public authority that controls the specified road",
+      "reason": "Road ownership varies between municipal, panchayat, State and Central bodies, so the location and road type are needed before selecting an office.",
+      "required_fields": ["state", "district_or_city", "locality", "road_type_or_controlling_authority"],
+      "record_requests": [
+        "Provide copies of the current file noting, inspection records and action-taken records concerning repair or maintenance of the specified road for {date_range}.",
+        "Provide copies of sanctioned estimates, administrative or technical approvals, work orders and tender/contract records for the specified work, where held.",
+        "Provide records showing amounts sanctioned, amounts paid, contractor or executing-agency details, and the recorded completion status.",
+        "Provide copies of complaints received about this location and the action recorded on each complaint for {date_range}.",
+        "Provide the name and designation of the office responsible for maintenance of this road as recorded by the public authority."
+      ]
+    },
+    {
+      "id": "sanitation_local_services",
+      "domain": "Sanitation / local services",
+      "keywords": ["garbage", "waste", "sanitation", "drain", "sewage", "cleaning", "streetlight", "municipal", "ward"],
+      "authority_type": "Local civic-service public authority",
+      "likely_authority": "The municipal, panchayat, sanitation, sewerage, or other local public authority responsible for the service at the specified location",
+      "reason": "Local-service responsibility depends on whether the area is governed by a municipality, corporation, panchayat, utility, or another agency.",
+      "required_fields": ["state", "district_or_city", "locality", "service_or_asset"],
+      "record_requests": [
+        "Provide the service schedule, duty roster or applicable service standard for {issue} at {location} for {date_range}.",
+        "Provide copies of complaints, inspection reports and action-taken entries relating to this issue for {date_range}.",
+        "Provide copies of work orders or contracts for the relevant service at this location, including the executing agency and contract period, where held.",
+        "Provide records showing the office and designation responsible for monitoring this service at the specified location."
+      ]
+    },
+    {
+      "id": "water_supply",
+      "domain": "Water supply / public utility",
+      "keywords": ["water", "pipeline", "tap", "supply", "contamination", "tanker", "borewell", "leakage"],
+      "authority_type": "Public water-supply or engineering authority",
+      "likely_authority": "The local body, public water utility, public health engineering department, or other authority responsible for the specified supply",
+      "reason": "Water-service control differs by State and local utility arrangement.",
+      "required_fields": ["state", "district_or_city", "locality", "water_supplier_or_connection_details"],
+      "record_requests": [
+        "Provide records of supply schedules, interruptions and restoration action for {location} during {date_range}.",
+        "Provide copies of water-quality test reports for the relevant supply zone during {date_range}, where available.",
+        "Provide copies of complaints, inspection records, repair work orders and action-taken records concerning the stated issue.",
+        "Provide records identifying the office responsible for operation and maintenance of this supply."
+      ]
+    },
+    {
+      "id": "food_public_distribution",
+      "domain": "Ration / public distribution",
+      "keywords": ["ration", "pds", "fair price", "food grain", "dealer", "ration card", "distribution"],
+      "authority_type": "Food and civil-supplies/public-distribution authority",
+      "likely_authority": "The State/UT food and civil-supplies or public-distribution authority responsible for the ration card or fair-price shop",
+      "reason": "Public-distribution administration and record custody are State/UT and locality specific.",
+      "required_fields": ["state", "district_or_city", "ration_card_or_fair_price_shop_details"],
+      "record_requests": [
+        "Provide the recorded status and processing history of the specified ration-card or public-distribution matter.",
+        "Provide copies of allocation, stock, distribution and inspection records for the identified fair-price shop for {date_range}, where relevant.",
+        "Provide copies of complaints and action-taken records relating to the identified shop or application for {date_range}.",
+        "Provide the name and designation of the office responsible for the relevant record or service."
+      ]
+    },
+    {
+      "id": "police_administration",
+      "domain": "Police administration records",
+      "keywords": ["police", "fir", "complaint", "station", "investigation", "diary", "patrol", "cctv"],
+      "authority_type": "Police public authority holding the administrative record",
+      "likely_authority": "The police unit or supervisory public authority that holds the requested administrative record",
+      "reason": "The correct unit depends on the police station, district/commissionerate and record requested; disclosure may also be subject to statutory exemptions.",
+      "required_fields": ["state", "district_or_city", "police_station_or_unit", "record_or_reference_number"],
+      "record_requests": [
+        "Provide the diary, receipt or registration particulars recorded for the specified complaint or representation.",
+        "Provide copies of administrative forwarding and action-taken records on the complaint for {date_range}, subject to applicable exemptions.",
+        "Provide the recorded designation of the officer or unit currently responsible for the matter.",
+        "If any requested material is withheld, provide the decision identifying the statutory provision relied upon for withholding it."
+      ]
+    },
+    {
+      "id": "government_education",
+      "domain": "Government education",
+      "keywords": ["school", "college", "teacher", "scholarship", "admission", "education", "midday meal", "mid day meal"],
+      "authority_type": "Government education authority or public educational institution",
+      "likely_authority": "The government institution, local education office, State/UT education authority, or Central education authority that holds the records",
+      "reason": "Record custody depends on whether the institution and programme are local, State/UT, or Central.",
+      "required_fields": ["state", "district_or_city", "institution_or_scheme_name", "government_level"],
+      "record_requests": [
+        "Provide the recorded status and file movement for the specified application, complaint or service matter.",
+        "Provide copies of the applicable selection, allocation or service criteria and the record showing how they were applied in this matter.",
+        "Provide copies of relevant inspection reports, attendance or delivery records, orders and action-taken records for {date_range}, where applicable.",
+        "Provide records identifying the office responsible for the decision or service."
+      ]
+    },
+    {
+      "id": "land_revenue_records",
+      "domain": "Land / revenue records",
+      "keywords": ["land record", "mutation", "revenue", "patta", "survey", "registry", "khasra", "khata", "tehsil"],
+      "authority_type": "State/UT land or revenue-record authority",
+      "likely_authority": "The tehsil/taluk, survey, registration, land-record, revenue, or other State/UT authority holding the specified record",
+      "reason": "Land administration and record names vary by State/UT and district.",
+      "required_fields": ["state", "district", "tehsil_or_taluk", "property_or_record_identifier"],
+      "record_requests": [
+        "Provide a copy of the current record and the mutation or change history for the identified property, where the public authority holds it.",
+        "Provide the application receipt, file movement, noting and order records for the specified land-record request.",
+        "Provide copies of survey, inspection or measurement records connected with the stated matter, where available.",
+        "Provide records identifying the office responsible for maintaining and correcting this record."
+      ]
+    },
+    {
+      "id": "public_health",
+      "domain": "Public health service",
+      "keywords": ["hospital", "clinic", "health centre", "medicine", "ambulance", "doctor", "public health", "vaccination"],
+      "authority_type": "Public health institution or health authority",
+      "likely_authority": "The government health institution, district health authority, State/UT health department, or Central authority holding the records",
+      "reason": "Responsibility depends on the institution, programme, and level of government.",
+      "required_fields": ["state", "district_or_city", "institution_or_programme", "service_date_or_reference"],
+      "record_requests": [
+        "Provide the recorded status, file movement and action taken on the specified public-health service matter.",
+        "Provide copies of the applicable service protocol, duty roster, stock record or inspection record relevant to the issue for {date_range}, where held.",
+        "Provide copies of complaints and action-taken records relating to the specified service for {date_range}.",
+        "Provide records identifying the office responsible for the relevant service or record."
+      ]
+    },
+    {
+      "id": "government_benefit_service",
+      "domain": "Government benefit / scheme administration",
+      "keywords": ["scheme", "benefit", "pension", "subsidy", "application", "beneficiary", "payment", "dbt"],
+      "authority_type": "Scheme-administering public authority or implementing agency",
+      "likely_authority": "The government department or public implementing agency that processed the identified scheme application or payment",
+      "reason": "The administering authority must be identified from the scheme name, State/UT, application reference and implementing level.",
+      "required_fields": ["scheme_name", "state", "district_or_city", "application_or_beneficiary_reference"],
+      "record_requests": [
+        "Provide the recorded status and complete processing history of the specified application or benefit.",
+        "Provide copies of deficiency notices, verification reports, approvals, rejection orders and payment records connected with the application.",
+        "Provide the eligibility criteria and operational instructions recorded as applicable to this application on the relevant date.",
+        "Provide records identifying the office currently responsible for the pending action, if any."
+      ]
+    }
+  ],
+  "fallback": {
+    "id": "generic_public_record",
+    "domain": "Public administration / records",
+    "authority_type": "Public authority holding or controlling the requested record",
+    "likely_authority": "Unable to identify without the government service, location, and office involved",
+    "reason": "No reliable topic match was found. RTI routing must follow the authority that holds or controls the records, not a guessed topic-to-department mapping.",
+    "required_fields": ["government_service_or_programme", "state_or_central", "state", "district_or_city", "office_previously_contacted"],
+    "record_requests": [
+      "Provide copies of the file, noting, correspondence, orders and action-taken records concerning {issue} for {date_range}.",
+      "Provide the recorded status and dates of movement between offices for this matter.",
+      "Provide copies of the applicable administrative instructions or service standards used to process this matter.",
+      "Provide records identifying the office and designation responsible for the next recorded action."
+    ]
+  }
+}

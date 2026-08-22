@@ -9,7 +9,7 @@ const CHIPS = [
   { label: "BNSS", icon: "\uD83D\uDCDC" },
   { label: "Constitution", icon: "\uD83C\uDDEE\uD83C\uDDF3" },
   { label: "NALSA", icon: "\uD83C\uDFDB\uFE0F" },
-  { label: "22 Languages", icon: "\uD83D\uDDE3\uFE0F" },
+  { label: "Multilingual", icon: "\uD83D\uDDE3\uFE0F" },
   { label: "Voice AI", icon: "\uD83C\uDFA4" },
 ];
 
@@ -73,9 +73,8 @@ export function HeroSection({ onStartChat }: HeroSectionProps) {
               backgroundClip: "text",
             }}
           >
-            LEXARO
+            CHAKRAVYUHA
           </span>
-          <span className="gradient-text-violet">.AI</span>
         </h1>
         <p
           className="text-xs tracking-[0.3em] font-medium uppercase"
@@ -93,9 +92,8 @@ export function HeroSection({ onStartChat }: HeroSectionProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.45 }}
       >
-        Navigate the Indian Constitution, Bhartiya Nyaya Sanhita, and legal procedures
-        with classification-first AI guidance — no hallucinations, in{" "}
-        <span style={{ color: "var(--color-primary)" }}>22 regional languages</span>.
+        Understand a civic or legal issue, identify missing information, prepare a reviewed
+        action, and see the next practical step with uncertainty made visible.
       </motion.p>
 
       {/* Magnetic CTA */}
@@ -119,7 +117,7 @@ export function HeroSection({ onStartChat }: HeroSectionProps) {
         }}
         className="flex items-center gap-2 px-7 py-3 rounded-full text-sm font-semibold transition-shadow"
       >
-        Start Legal Consultation
+        Start Civic & Legal Consultation
         <span aria-hidden>&#8594;</span>
       </motion.button>
 
@@ -131,7 +129,7 @@ export function HeroSection({ onStartChat }: HeroSectionProps) {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7 }}
       >
-        Classification-First &middot; Zero Hallucinations &middot; Official Legal Frameworks
+        Classification-first &middot; Uncertainty shown &middot; Sources where available
       </motion.p>
 
       {/* Chips */}

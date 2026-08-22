@@ -1,8 +1,8 @@
-# Chakravyuha - AI Legal Assistant for India
+# Chakravyuha - Civic and Legal Action Assistant for India
 
-> Voice-first, multilingual, agentic AI legal assistant — making Indian law accessible to every citizen.
+> A voice-enabled assistant that helps citizens understand an issue, identify a likely pathway, fill information gaps, prepare an action, and see the next practical step.
 
-**Chakravyuha** is a voice-enabled legal aid platform that guides users through complex Indian legal scenarios using structured decision flows, Corrective RAG, and multilingual voice support via Sarvam AI. It targets the intersection of three massive gaps in India: legal illiteracy (80%+ of 1.4B population), language exclusion, and access poverty (15 judges per million, 52.5M pending cases).
+**Chakravyuha** combines structured civic workflows, legal retrieval, document drafting, guided flows, multilingual voice support, and human-gated portal assistance. Civic and legal outputs expose uncertainty and source metadata; the system does not replace an authority's eligibility or jurisdiction decision or a lawyer's advice.
 
 ---
 
@@ -12,10 +12,10 @@
 ### Backend
 
 ```bash
-cd C:\code\HINDSIGHT
+cd chakravyuha-main
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
 # Configure API keys
 cp .env.example .env
@@ -29,13 +29,13 @@ python -m uvicorn backend.main:app --reload --port 8000
 
 # Verify
 curl http://localhost:8000/health
-# {"status":"healthy","rag_ready":true}
+# {"status":"healthy"}
 ```
 
 ### Frontend (Chakravyuha UI)
 
 ```bash
-cd C:\code\HINDSIGHT\chakravyuha-ui
+cd chakravyuha-ui
 
 npm install
 npm run dev
@@ -46,7 +46,7 @@ npm run dev
 
 ```bash
 pytest tests/ -v --cov=backend
-# 76+ tests passing across all modules
+# Runs the complete backend regression suite
 ```
 
 ### Environment Variables
@@ -129,6 +129,16 @@ Hindi, Tamil, Bengali, Telugu, Marathi, Kannada, Malayalam, Gujarati, Odia, Punj
 
 ## Features
 
+### Problem Statement 3 - Civic Action Workflows
+
+- **RTI assistant**: plain-language classification, jurisdiction questions, review-required authority hints, conversion of grievances into requests for identifiable records, an editable RTI application, text download, and Central-versus-State filing safeguards.
+- **Government-scheme eligibility**: deterministic rules for a deliberately small official-source catalogue (PM-SYM, APY, and PM-KISAN), with matched, unknown, and potentially disqualifying conditions. It never emits an eligibility percentage.
+- **CPGRAMS grievance assistant**: official-exclusion checks, broad authority routing, missing-information prompts, a structured grievance draft, filing/tracking guidance, and a handoff to the existing OpenClaw implementation.
+- **Consumer, tenant, and labour orientation**: a separate provenance-aware civic corpus. Tenant results require a State/UT before any local rule can be relied upon.
+- **Human-controlled external actions**: login, OTP, CAPTCHA, identity and consent remain with the citizen. OpenClaw requires confirmation bound to the exact pending payload immediately before submission and does not report success without portal confirmation evidence.
+
+The legacy criminal corpus has unresolved internal mapping conflicts recorded in `data/corpus_integrity_status.json`. Those records are marked `requires_verification`; new civic records do not inherit the conflicting mappings.
+
 ### Judging Criteria Map
 
 | Feature | Judging Criteria | Weight |
@@ -147,7 +157,7 @@ Hindi, Tamil, Bengali, Telugu, Marathi, Kannada, Malayalam, Gujarati, Odia, Punj
 - **Voice I/O Pipeline**: Multi-model ASR cascade (Sarvam -> IndicWhisper -> Meta MMS) with confidence-based fallback. TTS cascade (Bulbul-V2 -> Piper -> eSpeak-ng).
 - **Legal RAG System**: ChromaDB + InLegalBERT embeddings + BM25 hybrid retrieval + Corrective RAG.
 - **REST API Layer**: 5 core endpoints for query, voice, dictation, sections, health.
-- **Testing**: 27 tests passing, 75%+ coverage.
+- **Testing**: Run `pytest tests/ -v` for the current verified result; optional RAG tests skip when their model/database dependencies are unavailable.
 
 ### Phase 2 - Nyaya Intelligence (Complete)
 
@@ -158,10 +168,10 @@ Hindi, Tamil, Bengali, Telugu, Marathi, Kannada, Malayalam, Gujarati, Odia, Punj
 
 ### Phase 2 - Advanced Features (Complete)
 
-- **Document Drafting**: Auto-generate FIR, legal notices, complaints (14 tests).
+- **Document Drafting**: Generate FIRs, reviewed legal-notice/complaint starting points, and RTI applications through the shared document engine.
 - **AI Judge / Verdict Predictor**: Predict conviction likelihood with evidence scoring (12 tests).
 - **Strategy Generator**: Action plans with timeline, cost breakdown, evidence checklist (8 tests).
-- **Jargon Simplifier**: 50+ legal terms in plain language, multilingual (12 tests).
+- **Jargon Simplifier**: Plain-language criminal and civic/legal terms, including RTI, consumer, tenancy, and workplace concepts.
 - **Explainability**: Transparent reasoning traces with per-evidence confidence.
 
 ---
@@ -189,6 +199,26 @@ Hindi, Tamil, Bengali, Telugu, Marathi, Kannada, Malayalam, Gujarati, Odia, Punj
 | `/api/guided/next` | POST | Next step: `{current_node, path[], selected_answer}` -> next question |
 | `/api/guided/tree` | GET | Full decision tree |
 
+The same guided tree now hands off RTI, scheme, consumer, tenant, labour, and CPGRAMS journeys to their typed workflows while preserving the existing criminal paths.
+
+### Civic Action Endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/rti/identify-department` | POST | Return a likely authority type, confidence, reason, and missing jurisdiction information |
+| `/api/rti/draft` | POST | Propose record requests and generate a reviewable RTI application |
+| `/api/rti/download` | POST | Download a complete reviewed RTI draft as UTF-8 text |
+| `/api/rti/templates` | GET | List editable record-request patterns and provenance |
+| `/api/rti/guide` | GET | Get Central-versus-State filing safeguards |
+| `/api/schemes/list` | GET | List the verified scheme catalogue |
+| `/api/schemes/search?q=farmer` | GET | Search sourced schemes |
+| `/api/schemes/{scheme_id}` | GET | Get scheme rules, documents, process, and sources |
+| `/api/schemes/check-eligibility` | POST | Evaluate selected or all schemes deterministically |
+| `/api/schemes/guided-check` | POST | Ask only the next few unanswered eligibility questions |
+| `/api/cpgrams/prepare` | POST | Classify and prepare a grievance for citizen review; never submits |
+| `/api/cpgrams/guide` | GET | Return sourced exclusion, filing, and tracking guidance |
+| `/api/legal/domains/query` | POST | Query source-linked consumer, tenant, or labour records |
+
 ### Case Management
 
 | Endpoint | Method | Purpose |
@@ -215,7 +245,7 @@ Hindi, Tamil, Bengali, Telugu, Marathi, Kannada, Malayalam, Gujarati, Odia, Punj
 |----------|--------|---------|
 | `/api/documents/draft-fir` | POST | Generate FIR document |
 | `/api/documents/draft-legal-notice` | POST | Generate legal notice |
-| `/api/documents/draft-complaint` | POST | Generate complaint |
+| `/api/documents/draft-complaint` | POST | Generate the existing generic complaint-petition starting point; verify forum and law |
 | `/api/documents/preview` | POST | Preview before generation |
 | `/api/documents/templates` | GET | List available templates |
 

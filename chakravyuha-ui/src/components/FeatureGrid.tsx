@@ -31,13 +31,13 @@ const FEATURES = [
   {
     icon: "\uD83D\uDEE1\uFE0F",
     title: "Safe Responses",
-    desc: "Classification-first pipeline \u2014 zero hallucinations, verified legal info",
+    desc: "Classification-first pipeline with uncertainty and source context",
     accent: "rose",
   },
   {
     icon: "\uD83D\uDDE3\uFE0F",
-    title: "22 Languages",
-    desc: "Hindi, Tamil, Bengali, Telugu, Marathi, Gujarati, and more",
+    title: "Multilingual",
+    desc: "Use the supported Indian-language voice and text interfaces",
     accent: "indigo",
   },
 ];

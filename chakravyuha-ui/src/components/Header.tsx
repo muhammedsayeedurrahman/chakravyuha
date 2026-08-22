@@ -57,8 +57,7 @@ export function Header() {
             className="text-base font-bold leading-tight tracking-tight"
             style={{ color: "var(--color-text)", fontFamily: "var(--font-playfair)" }}
           >
-            LEXARO
-            <span className="gradient-text-violet text-xs font-normal ml-0.5">.AI</span>
+            CHAKRAVYUHA
           </h1>
           <p className="text-[9px] leading-none tracking-wider uppercase" style={{ color: "var(--color-text-faint)" }}>
             Legal Help. Simplified. Localized.
@@ -130,20 +129,20 @@ export function Header() {
           </AnimatePresence>
         </div>
 
-        {/* Animated LIVE Demo badge */}
+        {/* Backend availability */}
         <span
           className="hidden sm:flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5"
           style={{
-            background: "var(--color-primary-dim)",
-            border: "1px solid rgba(167, 139, 250, 0.3)",
-            color: "var(--color-primary)",
+            background: state.backendOnline ? "rgba(34,197,94,0.1)" : "rgba(245,158,11,0.1)",
+            border: `1px solid ${state.backendOnline ? "rgba(34,197,94,0.3)" : "rgba(245,158,11,0.3)"}`,
+            color: state.backendOnline ? "#22c55e" : "#f59e0b",
           }}
         >
           <span
             className="w-1.5 h-1.5 rounded-full"
-            style={{ background: "var(--color-primary)", animation: "pulse 1.5s ease-in-out infinite" }}
+            style={{ background: state.backendOnline ? "#22c55e" : "#f59e0b", animation: "pulse 1.5s ease-in-out infinite" }}
           />
-          LIVE DEMO
+          {state.backendOnline ? "BACKEND ONLINE" : "BACKEND UNAVAILABLE"}
         </span>
       </div>
     </header>

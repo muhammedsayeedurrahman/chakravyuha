@@ -63,7 +63,7 @@ def test_draft_legal_notice(drafter, sample_case):
     assert "Raj Kumar" in notice
     assert "John Doe" in notice
     assert "BNS-303" in notice
-    assert "30 (Thirty) days" in notice
+    assert "legally reviewed response date or period" in notice
 
 
 def test_draft_complaint(drafter, sample_case):

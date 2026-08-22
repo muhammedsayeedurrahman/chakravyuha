@@ -74,6 +74,32 @@ class AdaptiveRAG:
             return self._moderate_retrieve(query)
         return self._complex_retrieve(query)
 
+    def retrieve_civic(
+        self,
+        query: str,
+        domain: str | None = None,
+        jurisdiction: str | None = None,
+        top_k: int = RAG_TOP_K,
+    ) -> dict:
+        """Use the existing hybrid retriever's domain-safe civic branch.
+
+        Civic questions deliberately bypass the BNS/IPC-specific synonym and
+        HyDE prompts used by the criminal-law path.
+        """
+        records = self._hybrid.retrieve_civic(
+            query=query,
+            domain=domain,
+            jurisdiction=jurisdiction,
+            top_k=top_k,
+        )
+        return {
+            "records": records,
+            "confidence": "medium" if records else "low",
+            "strategy": "domain_bm25",
+            "fallback": not bool(records),
+            "message": None if records else "No source record matched the query.",
+        }
+
     # ------------------------------------------------------------------
     # Strategy implementations
     # ------------------------------------------------------------------

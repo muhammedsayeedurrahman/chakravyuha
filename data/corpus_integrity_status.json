@@ -1,0 +1,12 @@
+{
+  "status": "requires_verification",
+  "last_audited": "2026-08-20",
+  "scope": [
+    "bns_sections.json",
+    "ipc_to_bns_mapping.json",
+    "ipc_bns_mapping.json"
+  ],
+  "reason": "The repository audit found internal conflicts between processed BNS titles and recorded raw-source entries, and between the two IPC-to-BNS mapping files. Passing legacy tests does not resolve those conflicts.",
+  "handling": "New civic records do not inherit these mappings. Legacy criminal section and cross-reference outputs are marked requires_verification and should be checked against the current official India Code text before reliance.",
+  "authoritative_source_to_verify": "https://www.indiacode.nic.in/"
+}

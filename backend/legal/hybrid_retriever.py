@@ -6,6 +6,7 @@ import logging
 
 from backend.config import RAG_TOP_K
 from backend.legal.bm25_index import BM25Index
+from backend.legal.corpus_loader import CorpusLoader
 from backend.legal.rag import LegalRAG
 from backend.legal.sections import SectionLookup
 
@@ -24,6 +25,8 @@ class HybridRetriever:
         self._section_lookup = SectionLookup()
         all_sections = list(self._section_lookup._bns) + list(self._section_lookup._ipc)
         self._bm25 = BM25Index(all_sections)
+        self._civic_records = [record.to_dict() for record in CorpusLoader.load_civic_records()]
+        self._civic_bm25 = BM25Index(self._civic_records)
 
     def retrieve(
         self, query: str, top_k: int = RAG_TOP_K, rrf_k: int = 60
@@ -79,3 +82,58 @@ class HybridRetriever:
             results.append({**section_data, "rrf_score": round(rrf_score, 4)})
 
         return results
+
+    def retrieve_civic(
+        self,
+        query: str,
+        domain: str | None = None,
+        jurisdiction: str | None = None,
+        top_k: int = 5,
+    ) -> list[dict]:
+        """Retrieve civic records without applying criminal query expansion.
+
+        The current civic corpus is intentionally small and source-controlled,
+        so BM25 is deterministic and every result retains its provenance.  The
+        score is lexical relevance, not legal certainty or eligibility.
+        """
+        records = self._civic_records
+        if domain:
+            records = [record for record in records if record["domain"] == domain]
+        records = self.filter_civic_records(records, jurisdiction)
+        index = self._civic_bm25 if records is self._civic_records else BM25Index(records)
+        results = index.search(query, top_k=top_k)
+
+        # General India and State/UT-dependent orientation records remain useful
+        # after a State is supplied; they do not assert a State-specific rule.
+        output: list[dict] = []
+        for result in results:
+            raw_score = float(result.pop("bm25_score", 0.0))
+            result["score"] = round(raw_score / (raw_score + 1.0), 3)
+            result["query_jurisdiction"] = jurisdiction
+            output.append(result)
+        return output
+
+    @staticmethod
+    def filter_civic_records(
+        records: list[dict], jurisdiction: str | None
+    ) -> list[dict]:
+        """Keep national/orientation records and only the requested local rules.
+
+        A concrete State/UT record is never returned for a different or missing
+        jurisdiction.  Generic ``State/UT-specific`` warnings remain available
+        because they contain no local substantive rule.
+        """
+        general_prefixes = ("india", "state/ut-specific")
+        if not jurisdiction:
+            return [
+                record
+                for record in records
+                if record.get("jurisdiction", "").casefold().startswith(general_prefixes)
+            ]
+        requested = jurisdiction.casefold().strip()
+        return [
+            record
+            for record in records
+            if record.get("jurisdiction", "").casefold().startswith(general_prefixes)
+            or requested in record.get("jurisdiction", "").casefold()
+        ]

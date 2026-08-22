@@ -44,7 +44,10 @@ class FlowStatus(str, Enum):
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     WAITING_OTP = "waiting_otp"
+    WAITING_CAPTCHA = "waiting_captcha"
+    AWAITING_CONFIRMATION = "awaiting_confirmation"
     CAPTCHA_FAILED = "captcha_failed"
+    CANCELLED = "cancelled"
     SUBMITTED = "submitted"
     SUCCESS = "success"
     ERROR = "error"
@@ -62,6 +65,9 @@ class PortalStep:
     wait_after: str | None = None
     timeout_ms: int = 30000
     ai_fallback_instruction: str | None = None
+    # Mark a CLICK that transmits data (for example, account registration).
+    # StepAction.SUBMIT is always confirmation-gated regardless of this flag.
+    requires_confirmation: bool = False
 
 
 @dataclass(frozen=True)

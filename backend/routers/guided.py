@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/guided", tags=["guided"])
 async def start_guided_flow() -> GuidedFlowStep:
     """Start a new guided flow session — returns the root question."""
     service = get_legal_service()
-    state = GuidedFlowState(current_node="root")
+    state = GuidedFlowState(current_node="start")
     return service.get_guided_step(state)
 
 

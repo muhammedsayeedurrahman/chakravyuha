@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import logging
 import re
 import uuid
 from typing import Callable
 
 from backend.agent.openclaw.browser_engine import BrowserEngine
-from backend.agent.openclaw.captcha_solver import CaptchaSolver
+from backend.agent.openclaw.human_gate import CaptchaGate, ConfirmationGate
 from backend.agent.openclaw.models import FilingRequest, FlowResult, FlowStatus
 from backend.agent.openclaw.otp_gate import OTPGate
 from backend.agent.openclaw.portal_registry import PortalRegistry
@@ -24,7 +25,8 @@ class SessionState:
     __slots__ = (
         "session_id", "portal_id", "status", "message",
         "steps_completed", "current_step", "reference_number",
-        "error", "result",
+        "error", "result", "captcha_prompt", "captcha_image_base64",
+        "payload_digest", "pending_action",
     )
 
     def __init__(self, session_id: str, portal_id: str) -> None:
@@ -37,12 +39,24 @@ class SessionState:
         self.reference_number: str | None = None
         self.error: str | None = None
         self.result: FlowResult | None = None
+        self.captcha_prompt: str | None = None
+        self.captcha_image_base64: str | None = None
+        self.payload_digest: str | None = None
+        self.pending_action: dict | None = None
 
     def to_dict(self) -> dict:
         """Serialize to API response with next_actions hint."""
         next_actions: list[str] = []
         if self.status == "waiting_otp":
             next_actions = ["POST /api/openclaw/otp with session_id and otp"]
+        elif self.status == "waiting_captcha":
+            next_actions = [
+                "Read the CAPTCHA and POST /api/openclaw/captcha with session_id and captcha_text"
+            ]
+        elif self.status == "awaiting_confirmation":
+            next_actions = [
+                "Review pending_action and POST /api/openclaw/confirm with session_id, payload_digest, and confirmed"
+            ]
         elif self.status in ("started", "in_progress"):
             next_actions = ["GET /api/openclaw/status/{session_id} to poll"]
         elif self.status == "error":
@@ -57,6 +71,10 @@ class SessionState:
             "steps_completed": list(self.steps_completed),
             "reference_number": self.reference_number,
             "error": self.error,
+            "captcha_prompt": self.captcha_prompt,
+            "captcha_image_base64": self.captcha_image_base64,
+            "payload_digest": self.payload_digest,
+            "pending_action": self.pending_action,
             "next_actions": next_actions,
         }
 
@@ -71,6 +89,8 @@ class OpenClawOrchestrator:
     def __init__(self) -> None:
         self._registry = PortalRegistry()
         self._otp_gate = OTPGate()
+        self._captcha_gate = CaptchaGate()
+        self._confirmation_gate = ConfirmationGate()
         self._sessions: dict[str, SessionState] = {}
         self._engines: dict[str, BrowserEngine] = {}
         self._tasks: dict[str, asyncio.Task] = {}
@@ -78,6 +98,14 @@ class OpenClawOrchestrator:
     @property
     def otp_gate(self) -> OTPGate:
         return self._otp_gate
+
+    @property
+    def captcha_gate(self) -> CaptchaGate:
+        return self._captcha_gate
+
+    @property
+    def confirmation_gate(self) -> ConfirmationGate:
+        return self._confirmation_gate
 
     def list_portals(self) -> list[dict]:
         return self._registry.list_portals()
@@ -149,8 +177,13 @@ class OpenClawOrchestrator:
         state = self._sessions[session_id]
 
         def progress(msg: str) -> None:
+            state.status = "in_progress"
             state.current_step = msg
             state.message = msg
+            state.captcha_prompt = None
+            state.captcha_image_base64 = None
+            state.payload_digest = None
+            state.pending_action = None
             logger.info("[%s] %s", session_id, msg)
 
         # Validate portal
@@ -189,14 +222,37 @@ class OpenClawOrchestrator:
             await engine.launch(headless=headless)
 
             # 2. Create step executor
-            captcha_solver = CaptchaSolver()
-            executor = StepExecutor(engine, captcha_solver, self._otp_gate)
+            executor = StepExecutor(
+                engine,
+                None,
+                self._otp_gate,
+                self._captcha_gate,
+                self._confirmation_gate,
+            )
 
             # 3. Execute flow with session-aware progress
             def on_otp_waiting(msg: str) -> None:
                 state.status = "waiting_otp"
                 state.message = "OTP required — enter OTP to continue"
                 logger.info("[%s] Waiting for OTP", session_id)
+
+            def on_captcha_waiting(prompt: str, image: bytes | None) -> None:
+                state.status = "waiting_captcha"
+                state.message = "CAPTCHA requires manual entry — automation is paused"
+                state.captcha_prompt = prompt
+                state.captcha_image_base64 = (
+                    base64.b64encode(image).decode("ascii") if image else None
+                )
+                logger.info("[%s] Waiting for human CAPTCHA entry", session_id)
+
+            def on_confirmation_waiting(
+                payload_digest: str, pending_action: dict
+            ) -> None:
+                state.status = "awaiting_confirmation"
+                state.message = "Review the payload and explicitly confirm before submission"
+                state.payload_digest = payload_digest
+                state.pending_action = pending_action
+                logger.info("[%s] Waiting for payload-bound confirmation", session_id)
 
             progress(f"Starting {portal.name} flow...")
             result = await executor.execute_flow(
@@ -206,6 +262,8 @@ class OpenClawOrchestrator:
                 session_id=session_id,
                 on_progress=progress,
                 on_otp_waiting=on_otp_waiting,
+                on_captcha_waiting=on_captcha_waiting,
+                on_confirmation_waiting=on_confirmation_waiting,
             )
 
             state.steps_completed = list(result.steps_completed)
@@ -221,20 +279,17 @@ class OpenClawOrchestrator:
                     result = result.with_reference(ref_number)
                     progress(f"Reference number: {ref_number}")
                 else:
-                    ai_ref = await engine.ai_extract(
-                        "Find and return the registration number, reference number, "
-                        "docket number, or application number shown on this confirmation page"
+                    result = FlowResult(
+                        portal_id=portal.portal_id,
+                        status=FlowStatus.SUBMITTED,
+                        message=(
+                            "The portal confirmation state was observed, but no reference "
+                            "matching the verified portal pattern was found. Verify the "
+                            "submission in the portal before relying on it."
+                        ),
+                        steps_completed=result.steps_completed,
+                        screenshots=result.screenshots,
                     )
-                    if ai_ref:
-                        result = result.with_reference(ai_ref)
-                        progress(f"Reference number (AI): {ai_ref}")
-                    else:
-                        result = FlowResult(
-                            portal_id=portal.portal_id,
-                            status=FlowStatus.SUCCESS,
-                            message="Form submitted but could not extract reference number.",
-                            steps_completed=result.steps_completed,
-                        )
 
             # Finalize state
             state.result = result
@@ -264,6 +319,11 @@ class OpenClawOrchestrator:
         task = self._tasks.pop(session_id, None)
         if task and not task.done():
             task.cancel()
+
+        # Unblock every human-interaction wait before tearing down the browser.
+        self._otp_gate.cancel(session_id)
+        self._captcha_gate.cancel(session_id)
+        self._confirmation_gate.cancel(session_id)
 
         engine = self._engines.pop(session_id, None)
         if engine:

@@ -13,6 +13,7 @@ import { ChatModal } from "@/components/ChatModal";
 import { Card } from "@/components/Card";
 import { ComplaintDraftCard } from "@/components/ComplaintDraftCard";
 import { OpenClawCard } from "@/components/OpenClawCard";
+import { CivicAssistant, type CivicFilingHandoff, type CivicJourney } from "@/components/CivicAssistant";
 import { Preloader } from "@/components/Preloader";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { CurtainTransition } from "@/components/CurtainTransition";
@@ -26,6 +27,8 @@ export default function HomeContent() {
   const [chatOpen, setChatOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [showCurtain, setShowCurtain] = useState(false);
+  const [civicJourney, setCivicJourney] = useState<CivicJourney>("rti");
+  const [filingHandoff, setFilingHandoff] = useState<{ portalId: string; userData: Record<string, string> } | null>(null);
   const prevTabRef = useRef("home");
 
   const handleTabChange = useCallback((tab: string) => {
@@ -53,6 +56,21 @@ export default function HomeContent() {
     prevTabRef.current = "chat";
   }, []);
 
+  const handleOpenCivic = useCallback((journey: CivicJourney = "rti") => {
+    setCivicJourney(journey);
+    handleTabChange("civic");
+  }, [handleTabChange]);
+
+  const handleOpenFile = useCallback((portal?: string) => {
+    setFilingHandoff(portal ? { portalId: portal, userData: {} } : null);
+    handleTabChange("file");
+  }, [handleTabChange]);
+
+  const handleCivicFilingHandoff = useCallback((handoff: CivicFilingHandoff) => {
+    setFilingHandoff(handoff);
+    handleTabChange("file");
+  }, [handleTabChange]);
+
   if (!loaded) {
     return <Preloader onComplete={() => setLoaded(true)} />;
   }
@@ -71,7 +89,19 @@ export default function HomeContent() {
         {activeTab === "file" ? (
           /* ── File Tab (OpenClaw) ─────────────────────────────────── */
           <ErrorBoundary>
-            <OpenClawCard />
+            <OpenClawCard
+              key={`${filingHandoff?.portalId ?? "none"}-${filingHandoff?.userData.description?.slice(0, 24) ?? "blank"}`}
+              initialPortalId={filingHandoff?.portalId}
+              initialUserData={filingHandoff?.userData}
+            />
+          </ErrorBoundary>
+        ) : activeTab === "civic" ? (
+          <ErrorBoundary>
+            <CivicAssistant
+              key={civicJourney}
+              initialJourney={civicJourney}
+              onOpenClaw={handleCivicFilingHandoff}
+            />
           </ErrorBoundary>
         ) : activeTab === "draft" ? (
           /* ── Draft Tab ──────────────────────────────────────────── */
@@ -85,7 +115,8 @@ export default function HomeContent() {
             <StatsBar />
             <LawSection
               onOpenDraft={() => handleTabChange("draft")}
-              onOpenFile={() => handleTabChange("file")}
+              onOpenFile={handleOpenFile}
+              onOpenCivic={handleOpenCivic}
               onAutoFlow={handleStartChat}
             />
             <DemoShowcase />
@@ -110,7 +141,7 @@ export default function HomeContent() {
                       <span className="text-2xl">🎤</span>
                       <div>
                         <h2 className="font-bold text-sm" style={{ color: "var(--color-text)" }}>Speak your legal concern</h2>
-                        <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>Voice AI in 22 Indian languages</p>
+                        <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>Multilingual voice input and spoken responses</p>
                       </div>
                     </div>
                   </Card.Header>

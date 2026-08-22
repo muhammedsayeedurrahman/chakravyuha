@@ -2,7 +2,7 @@
   "metadata": {
     "version": "1.0",
     "description": "Legal glossary for plain language simplification",
-    "terms_count": 50,
+    "terms_count": 45,
     "languages": ["en", "hi", "ta"]
   },
   "Acquittal": {
@@ -284,5 +284,105 @@
     "hindi": "रिट",
     "tamil": "பட்டயம்",
     "related": ["Habeas Corpus", "Injunction", "Court Order"]
+  },
+  "Public Information Officer": {
+    "simple": "The officer designated by a public authority to receive and answer RTI requests",
+    "legal": "A Central or State Public Information Officer designated under the Right to Information Act, 2005",
+    "example": "An RTI application is addressed to the Public Information Officer of the public authority that holds the records.",
+    "hindi": "",
+    "tamil": "",
+    "related": ["RTI Application", "Public Authority", "First Appeal"],
+    "source": "Right to Information Act, 2005",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/15691/1/rti_act_2005.pdf"
+  },
+  "Public Authority": {
+    "simple": "A government-connected body covered by the RTI Act that may hold public records",
+    "legal": "A body or authority falling within the definition in section 2(h) of the Right to Information Act, 2005",
+    "example": "The correct public authority is the one that holds or controls the record being requested.",
+    "hindi": "",
+    "tamil": "",
+    "related": ["Public Information Officer", "RTI Application"],
+    "source": "Right to Information Act, 2005",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/15691/1/rti_act_2005.pdf"
+  },
+  "First Appeal": {
+    "simple": "The first formal challenge to an RTI decision or lack of response, made to the designated appellate authority",
+    "legal": "An appeal under section 19(1) of the Right to Information Act, 2005",
+    "example": "The applicant checked the Act and official guidance before preparing a first appeal.",
+    "hindi": "",
+    "tamil": "",
+    "related": ["RTI Application", "Public Information Officer"],
+    "source": "Right to Information Act, 2005",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/15691/1/rti_act_2005.pdf"
+  },
+  "Deficiency": {
+    "simple": "A legally relevant shortcoming in the quality or manner of a service, assessed under the Consumer Protection Act",
+    "legal": "The meaning assigned to deficiency by section 2(11) of the Consumer Protection Act, 2019",
+    "example": "A delayed or poor service is not automatically a proven deficiency; the facts and statutory definition must be checked.",
+    "hindi": "",
+    "tamil": "",
+    "related": ["Consumer", "Service", "Unfair Trade Practice"],
+    "source": "Consumer Protection Act, 2019",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/12808/1/the_consumer_protection_act%2C_2019_no._35_of_2019_date_09.08.2019.pdf"
+  },
+  "Unfair Trade Practice": {
+    "simple": "A trade practice that may be treated as unfair under the Consumer Protection Act's detailed definition",
+    "legal": "The meaning assigned to unfair trade practice by section 2(47) of the Consumer Protection Act, 2019",
+    "example": "Keep the advertisement and transaction record when an unfair representation is alleged.",
+    "hindi": "",
+    "tamil": "",
+    "related": ["Consumer", "Deficiency", "Misrepresentation"],
+    "source": "Consumer Protection Act, 2019",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/12808/1/the_consumer_protection_act%2C_2019_no._35_of_2019_date_09.08.2019.pdf"
+  },
+  "Lessor": {
+    "simple": "The person who grants a lease",
+    "legal": "The transferor in a lease of immovable property under the Transfer of Property Act, 1882",
+    "example": "The rent agreement identifies the lessor and lessee.",
+    "hindi": "",
+    "tamil": "",
+    "related": ["Lessee", "Lease", "Tenant"],
+    "source": "Transfer of Property Act, 1882",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/2338/1/A1882-04.pdf"
+  },
+  "Lessee": {
+    "simple": "The person to whom a lease is granted",
+    "legal": "The transferee in a lease of immovable property under the Transfer of Property Act, 1882",
+    "example": "Local rent law may also govern the lessee's rights and duties.",
+    "hindi": "",
+    "tamil": "",
+    "related": ["Lessor", "Lease", "Tenant"],
+    "source": "Transfer of Property Act, 1882",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/2338/1/A1882-04.pdf"
+  },
+  "Retrenchment": {
+    "simple": "A statutory job-termination concept whose coverage and exclusions must be checked under current industrial-relations law",
+    "legal": "The meaning assigned to retrenchment by the Industrial Relations Code, 2020",
+    "example": "A person should not assume every termination is retrenchment without checking status, facts, rules and exclusions.",
+    "hindi": "",
+    "tamil": "",
+    "related": ["Lay-off", "Industrial Dispute", "Termination"],
+    "source": "Industrial Relations Code, 2020",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/22040/1/A2020-35.pdf"
+  },
+  "Lay-off": {
+    "simple": "A statutory employment concept for an employer's inability or failure to provide work in covered circumstances",
+    "legal": "The meaning assigned to lay-off by the Industrial Relations Code, 2020",
+    "example": "Coverage, worker status and the reason work was unavailable must be verified.",
+    "hindi": "",
+    "tamil": "",
+    "related": ["Retrenchment", "Industrial Dispute", "Wages"],
+    "source": "Industrial Relations Code, 2020",
+    "source_url": "https://www.indiacode.nic.in/bitstream/123456789/22040/1/A2020-35.pdf"
+  },
+  "Internal Committee": {
+    "simple": "A workplace committee established for prevention and redressal of sexual-harassment complaints where the POSH Act requires it",
+    "legal": "An Internal Committee constituted under section 4 of the Sexual Harassment of Women at Workplace Act, 2013",
+    "example": "Check the employer's official policy and committee details before submitting sensitive information.",
+    "hindi": "",
+    "tamil": "",
+    "related": ["Workplace", "Sexual Harassment", "Local Committee"],
+    "source": "Sexual Harassment of Women at Workplace Act, 2013",
+    "source_url": "https://www.indiacode.nic.in/handle/123456789/2104?locale=en"
   }
 }

@@ -83,11 +83,22 @@ class LegalRAG:
                 "description": doc,
                 "score": round(similarity, 3),
                 "punishment": metadata.get("punishment", ""),
-                "cognizable": metadata.get("cognizable", ""),
-                "bailable": metadata.get("bailable", ""),
+                "cognizable": self._metadata_bool(metadata.get("cognizable")),
+                "bailable": self._metadata_bool(metadata.get("bailable")),
             })
 
         return sections
+
+    @staticmethod
+    def _metadata_bool(value: object) -> bool:
+        """Parse persisted boolean metadata instead of trusting string truthiness."""
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, (int, float)):
+            return bool(value)
+        if isinstance(value, str):
+            return value.strip().casefold() in {"true", "1", "yes"}
+        return False
 
     def retrieve_with_correction(self, query: str) -> dict:
         """Corrective RAG: retrieve, check confidence, re-query if needed.

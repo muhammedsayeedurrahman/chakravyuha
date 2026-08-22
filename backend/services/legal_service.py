@@ -16,12 +16,17 @@ from backend.data.loader import (
     load_ipc_to_bns_map,
 )
 from backend.models.schemas import (
+    CivicKnowledgeRecord,
+    CivicLegalQueryRequest,
+    CivicLegalQueryResponse,
+    ConfidenceLevel,
     GuidedFlowState,
     GuidedFlowStep,
     GuidedOption,
     LegalSection,
     QueryResponse,
     SectionResult,
+    KnowledgeStatus,
 )
 from backend.utils.confidence import classify_rag_confidence
 from backend.utils.disclaimer import append_disclaimer
@@ -40,6 +45,7 @@ class LegalService:
         self._ipc_to_bns = load_ipc_to_bns_map()
         self._bns_to_ipc = load_bns_to_ipc_map()
         self._retriever = None  # Initialized lazily via init_rag()
+        self._civic_retriever = None
         logger.info(
             "LegalService initialized: %d sections, %d keywords",
             len(self._section_index),
@@ -48,9 +54,14 @@ class LegalService:
 
     # ── Guided Flow (Deterministic — 100% accuracy) ──────────────────────────
 
+    @staticmethod
+    def _canonical_guided_node(node_key: str | None) -> str:
+        """Accept the legacy ``root`` value while using the real tree root."""
+        return "start" if not node_key or node_key == "root" else node_key
+
     def get_guided_step(self, state: GuidedFlowState) -> GuidedFlowStep:
         """Return the current guided flow step based on state."""
-        node_key = state.current_node
+        node_key = self._canonical_guided_node(state.current_node)
         node = self._guided_tree.get(node_key)
 
         if node is None:
@@ -58,6 +69,42 @@ class LegalService:
                 node_key=node_key,
                 question="Sorry, this path is not available. Please start over.",
                 is_leaf=True,
+            )
+
+        if node.get("terminal"):
+            section_ids = [*node.get("sections", []), *node.get("ipc_sections", [])]
+            matched = [
+                self._section_index[section_id]
+                for section_id in dict.fromkeys(section_ids)
+                if section_id in self._section_index
+            ]
+            return GuidedFlowStep(
+                node_key=node_key,
+                question=node.get("summary", "Relevant legal information"),
+                question_hi=node.get("summary_hi", ""),
+                is_leaf=True,
+                matched_sections=matched,
+                severity=node.get("severity") or ("high" if node.get("escalation") else None),
+                summary=node.get("summary"),
+                summary_hi=node.get("summary_hi"),
+                next_steps=node.get("next_steps", []),
+            )
+
+        if node.get("type") in {"free_text", "handoff"}:
+            prompt = node.get("prompt", "Please describe your issue.")
+            return GuidedFlowStep(
+                node_key=node_key,
+                question=prompt,
+                question_hi=node.get("prompt_hi", ""),
+                is_leaf=False,
+                type=node.get("type"),
+                prompt=prompt,
+                prompt_hi=node.get("prompt_hi"),
+                handler=node.get("handler"),
+                journey=node.get("journey"),
+                summary=node.get("summary"),
+                summary_hi=node.get("summary_hi"),
+                next_steps=node.get("next_steps", []),
             )
 
         options = []
@@ -83,10 +130,11 @@ class LegalService:
         self, state: GuidedFlowState, answer: str
     ) -> GuidedFlowStep:
         """Process user answer and advance to next step or return matched sections."""
-        node = self._guided_tree.get(state.current_node)
+        node_key = self._canonical_guided_node(state.current_node)
+        node = self._guided_tree.get(node_key)
         if node is None:
             return GuidedFlowStep(
-                node_key=state.current_node,
+                node_key=node_key,
                 question="Invalid state. Please start over.",
                 is_leaf=True,
             )
@@ -100,9 +148,9 @@ class LegalService:
 
         if selected is None:
             # Try partial match
-            answer_lower = answer.lower()
+            answer_lower = answer.strip().lower()
             for opt in node.get("options", []):
-                if answer_lower in opt.get("label", "").lower():
+                if answer_lower and answer_lower in opt.get("label", "").lower():
                     selected = opt
                     break
 
@@ -117,7 +165,7 @@ class LegalService:
                 if sid in self._section_index
             ]
             return GuidedFlowStep(
-                node_key=state.current_node,
+                node_key=node_key,
                 question="Here are the relevant legal sections:",
                 is_leaf=True,
                 matched_sections=matched,
@@ -125,10 +173,10 @@ class LegalService:
             )
 
         # Navigate to next node
-        next_key = selected.get("next", "root")
+        next_key = selected.get("next", "start")
         new_state = GuidedFlowState(
             current_node=next_key,
-            path=[*state.path, state.current_node],
+            path=[*state.path, node_key],
         )
         return self.get_guided_step(new_state)
 
@@ -299,6 +347,10 @@ class LegalService:
             )
 
         lines = [f"Based on your query about \"{query}\", here are the relevant legal sections:\n"]
+        lines.append(
+            "Verification note: legacy BNS/IPC summaries in this repository must be "
+            "checked against the current official statute before reliance.\n"
+        )
         for i, result in enumerate(results, 1):
             s = result.section
             lines.append(f"**{i}. {s.section_id} — {s.title}** (Act: {s.act})")
@@ -319,6 +371,91 @@ class LegalService:
             lines.append("")
 
         return "\n".join(lines)
+
+    # -- Provenance-aware civic/legal retrieval ------------------------------
+
+    def query_civic(self, request: CivicLegalQueryRequest) -> CivicLegalQueryResponse:
+        """Query consumer, tenant, or labour records without criminal templates."""
+        if self._civic_retriever is None:
+            from backend.legal.adaptive_rag import AdaptiveRAG
+
+            self._civic_retriever = AdaptiveRAG()
+
+        domain = request.domain or self._infer_civic_domain(request.query)
+        retrieval = self._civic_retriever.retrieve_civic(
+            request.query,
+            domain=domain,
+            jurisdiction=request.jurisdiction,
+            top_k=request.top_k,
+        )
+        results = [CivicKnowledgeRecord(**record) for record in retrieval["records"]]
+        missing: list[str] = []
+
+        if domain == "tenant" and not request.jurisdiction:
+            missing.append("State or Union Territory where the rented premises are located")
+            confidence = ConfidenceLevel.REQUIRES_JURISDICTION
+            status = KnowledgeStatus.REQUIRES_JURISDICTION
+        elif not results:
+            confidence = ConfidenceLevel.LOW
+            status = KnowledgeStatus.UNAVAILABLE
+        else:
+            confidence = ConfidenceLevel.MEDIUM
+            status = (
+                KnowledgeStatus.REQUIRES_VERIFICATION
+                if any(result.status != KnowledgeStatus.VERIFIED for result in results)
+                else KnowledgeStatus.VERIFIED
+            )
+
+        answer = self._build_civic_answer(domain, results, missing)
+        return CivicLegalQueryResponse(
+            query=request.query,
+            domain=domain,
+            jurisdiction=request.jurisdiction,
+            confidence=confidence,
+            status=status,
+            results=results,
+            missing_information=missing,
+            answer=answer,
+            disclaimer=(
+                "This response provides source-linked legal information, not legal advice. "
+                "Coverage, jurisdiction, current rules, and the facts must be verified before action."
+            ),
+        )
+
+    @staticmethod
+    def _infer_civic_domain(query: str) -> str | None:
+        text = query.casefold()
+        keywords = {
+            "consumer": ("consumer", "refund", "seller", "product", "warranty", "service provider"),
+            "tenant": ("tenant", "landlord", "rent", "lease", "eviction", "security deposit"),
+            "labour": ("employee", "employer", "salary", "wage", "workplace", "retrench", "epf", "esi", "posh"),
+        }
+        scores = {
+            domain: sum(term in text for term in terms)
+            for domain, terms in keywords.items()
+        }
+        best_domain, best_score = max(scores.items(), key=lambda item: item[1])
+        return best_domain if best_score else None
+
+    @staticmethod
+    def _build_civic_answer(
+        domain: str | None,
+        results: list[CivicKnowledgeRecord],
+        missing: list[str],
+    ) -> str:
+        if not results:
+            return (
+                "No verified source record matched this issue. Add whether it is a consumer, "
+                "tenant, or workplace matter and provide the relevant jurisdiction."
+            )
+        lead = results[0]
+        parts = [lead.summary]
+        if missing:
+            parts.append(f"Before relying on a rule, provide: {', '.join(missing)}.")
+        if lead.guidance:
+            parts.append(f"Practical next step: {lead.guidance[0]}")
+        parts.append(f"Primary source: {lead.source}.")
+        return " ".join(parts)
 
 
 # Thread-safe singleton via lru_cache

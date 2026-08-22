@@ -243,7 +243,7 @@ function ResponseCard({ data }: { data: SmartResponse }) {
           </span>
         ) : <span />}
         <span className="text-[9px] uppercase tracking-widest" style={{ color: "var(--color-text-faint)" }}>
-          {data.source === "classifier" ? "Verified Legal Database" : "Keyword Search"}
+          {data.source === "classifier" ? "Structured classifier result" : "Retrieval fallback"}
         </span>
       </div>
     </div>
@@ -325,8 +325,7 @@ export function ChatModal({ open, onClose }: ChatModalProps) {
               <div className="flex items-center gap-2">
                 <Logo size={24} />
                 <h2 className="font-semibold text-sm" style={{ color: "var(--color-text)" }}>
-                  Lexaro
-                  <span className="gradient-text-violet text-xs font-normal ml-0.5">.AI</span>
+                  Chakravyuha
                 </h2>
               </div>
               <div className="flex items-center gap-2">
@@ -348,7 +347,7 @@ export function ChatModal({ open, onClose }: ChatModalProps) {
                     Ask any legal question
                   </p>
                   <p className="text-xs" style={{ color: "var(--color-text-faint)" }}>
-                    Classification-first AI — no hallucinations, curated legal guidance
+                    Classification-first guidance with uncertainty and sources where available
                   </p>
                 </div>
               )}

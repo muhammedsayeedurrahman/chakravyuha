@@ -2,14 +2,40 @@
 
 import { motion } from "framer-motion";
 import { Card } from "@/components/Card";
+import type { CivicJourney } from "@/components/CivicAssistant";
 
 interface LawSectionProps {
   onOpenDraft: () => void;
   onOpenFile: (portal?: string) => void;
+  onOpenCivic: (journey: CivicJourney) => void;
   onAutoFlow: () => void;
 }
 
 const QUICK_ACTIONS = [
+  {
+    label: "Draft an RTI",
+    description: "Request government records",
+    icon: "📄",
+    action: "civic_rti" as const,
+  },
+  {
+    label: "Check Schemes",
+    description: "Explainable eligibility",
+    icon: "🏛️",
+    action: "civic_schemes" as const,
+  },
+  {
+    label: "Prepare CPGRAMS",
+    description: "Draft, review, then proceed",
+    icon: "📮",
+    action: "civic_cpgrams" as const,
+  },
+  {
+    label: "Rights Navigator",
+    description: "Consumer, tenant, workplace",
+    icon: "🧭",
+    action: "civic_rights" as const,
+  },
   {
     label: "Generate Complaint",
     description: "Draft FIR / legal notice",
@@ -18,42 +44,31 @@ const QUICK_ACTIONS = [
   },
   {
     label: "Apply Duplicate License",
-    description: "mParivahan portal",
+    description: "Continue to assisted filing",
     icon: "\uD83D\uDE97",
     action: "file_mparivahan" as const,
-  },
-  {
-    label: "File Consumer Complaint",
-    description: "Consumer Helpline",
-    icon: "\uD83D\uDED2",
-    action: "file_consumer" as const,
   },
 ];
 
 const YOUR_RIGHTS = [
   {
-    title: "Right to Legal Aid",
-    description: "Free lawyer via NALSA. Call 15100.",
+    title: "Legal-aid pathway",
+    description: "Legal-services institutions may provide assistance subject to eligibility. Verify the current service and requirements.",
     icon: "\u2696\uFE0F",
   },
   {
-    title: "Right to FIR",
-    description: "Police MUST register your FIR under law.",
+    title: "Reporting an offence",
+    description: "Police procedure depends on the alleged facts and whether they disclose a cognizable offence. Get case-specific help if a report is refused.",
     icon: "\uD83D\uDCCB",
   },
   {
-    title: "Right to Bail",
-    description: "Bailable offenses allow immediate bail.",
+    title: "Bail information",
+    description: "The applicable process depends on the offence classification, court, and circumstances. Verify it for the specific case.",
     icon: "\uD83D\uDD13",
   },
 ];
 
-const EMERGENCY_NUMBERS = [
-  { label: "112 Emergency", number: "112", color: "#ef4444" },
-  { label: "1091 Women Helpline", number: "1091", color: "#f59e0b" },
-];
-
-export function LawSection({ onOpenDraft, onOpenFile, onAutoFlow }: LawSectionProps) {
+export function LawSection({ onOpenDraft, onOpenFile, onOpenCivic, onAutoFlow }: LawSectionProps) {
   const handleAction = (action: string) => {
     switch (action) {
       case "draft":
@@ -62,8 +77,17 @@ export function LawSection({ onOpenDraft, onOpenFile, onAutoFlow }: LawSectionPr
       case "file_mparivahan":
         onOpenFile("mparivahan");
         break;
-      case "file_consumer":
-        onOpenFile("consumer_helpline");
+      case "civic_rti":
+        onOpenCivic("rti");
+        break;
+      case "civic_schemes":
+        onOpenCivic("schemes");
+        break;
+      case "civic_cpgrams":
+        onOpenCivic("cpgrams");
+        break;
+      case "civic_rights":
+        onOpenCivic("rights");
         break;
     }
   };
@@ -117,7 +141,7 @@ export function LawSection({ onOpenDraft, onOpenFile, onAutoFlow }: LawSectionPr
           className="text-xs font-semibold uppercase tracking-widest mb-3"
           style={{ color: "var(--color-text-faint)" }}
         >
-          Your Rights
+          Common pathways — verify details
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {YOUR_RIGHTS.map((right) => (
@@ -143,7 +167,7 @@ export function LawSection({ onOpenDraft, onOpenFile, onAutoFlow }: LawSectionPr
         </div>
       </motion.div>
 
-      {/* Emergency */}
+      {/* Emergency orientation */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -153,23 +177,10 @@ export function LawSection({ onOpenDraft, onOpenFile, onAutoFlow }: LawSectionPr
           className="text-xs font-semibold uppercase tracking-widest mb-3"
           style={{ color: "var(--color-text-faint)" }}
         >
-          Emergency
+          Immediate safety
         </h2>
-        <div className="flex gap-3">
-          {EMERGENCY_NUMBERS.map((em) => (
-            <a
-              key={em.number}
-              href={`tel:${em.number}`}
-              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold tracking-wide transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{
-                background: `${em.color}20`,
-                color: em.color,
-                border: `1px solid ${em.color}40`,
-              }}
-            >
-              {"📞"} {em.label}
-            </a>
-          ))}
+        <div className="rounded-2xl p-3.5 text-xs leading-relaxed" style={{ background: "rgba(239,68,68,0.1)", color: "var(--color-text-muted)", border: "1px solid rgba(239,68,68,0.25)" }}>
+          If someone is in immediate danger, contact the official emergency service available in their location. Verify any specialist helpline through the relevant government authority before relying on it.
         </div>
       </motion.div>
 
@@ -194,7 +205,7 @@ export function LawSection({ onOpenDraft, onOpenFile, onAutoFlow }: LawSectionPr
                 Auto Legal Agent
               </p>
               <p className="text-xs max-w-xs text-center" style={{ color: "var(--color-text-muted)" }}>
-                Describe your issue — AI handles the rest
+                Describe your issue for guided classification, source-aware guidance, and a reviewed next step
               </p>
             </button>
           </Card.Body>

@@ -14,7 +14,22 @@ CPGRAMS_CONFIG = PortalConfig(
     reference_pattern=r"(DARPG/[A-Z]/\d{4}/\d+|[A-Z]{2,}/[A-Z]/\d{4}/\d+)",
     max_file_size_mb=4,
     allowed_file_types=(".pdf", ".jpg", ".png", ".doc", ".docx"),
-    required_fields=("name", "gender", "mobile", "email", "state", "district", "pin_code", "address"),
+    required_fields=(
+        "name",
+        "gender",
+        "mobile",
+        "email",
+        "state",
+        "district",
+        "pin_code",
+        "address",
+        # These must be citizen-reviewed portal values. The preparation
+        # service deliberately does not invent a ministry or department ID.
+        "ministry",
+        "department",
+        "subject",
+        "description",
+    ),
     steps=(
         # ── Registration Flow ──
         PortalStep(
@@ -57,6 +72,7 @@ CPGRAMS_CONFIG = PortalConfig(
             action=StepAction.CLICK,
             selectors={"submit": "button#btnRegister, input[type='submit'], button[type='submit']"},
             wait_after="div.otp-section, input#OTP, div.success-message",
+            requires_confirmation=True,
         ),
         PortalStep(
             name="Enter mobile OTP",

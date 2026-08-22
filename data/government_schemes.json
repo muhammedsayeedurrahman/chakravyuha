@@ -1,0 +1,458 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "Deterministic eligibility records for a small set of centrally administered Government of India schemes.",
+    "scheme_count": 3,
+    "source_policy": "Official government or statutory-regulator sources only. Eligibility is a preliminary check; the administering authority makes the final decision.",
+    "last_verified": "2026-08-20",
+    "status": "verified"
+  },
+  "schemes": [
+    {
+      "id": "pm-sym",
+      "name": "Pradhan Mantri Shram Yogi Maan-dhan",
+      "short_name": "PM-SYM",
+      "aliases": [
+        "Pradhan Mantri Shram Yogi Maandhan",
+        "Shram Yogi Maan-dhan",
+        "unorganised worker pension"
+      ],
+      "description": "A voluntary and contributory pension scheme for eligible unorganised workers. The official scheme page states that an eligible subscriber receives a minimum assured pension of Rs 3,000 per month after age 60, subject to contributions and scheme terms.",
+      "benefit_summary": "Minimum assured pension of Rs 3,000 per month after age 60, with an age-based subscriber contribution matched by the Central Government.",
+      "target_group": "Eligible unorganised workers",
+      "eligibility_scope": "new_enrolment",
+      "jurisdiction": {
+        "country": "India",
+        "level": "central",
+        "states": ["ALL"]
+      },
+      "eligibility_rules": [
+        {
+          "id": "pm_sym_unorganised_worker",
+          "field": "is_unorganised_worker",
+          "operator": "eq",
+          "value": true,
+          "effect": "require",
+          "description": "The applicant is an unorganised worker in an occupation covered by the scheme description.",
+          "pass_message": "You indicated that you work in the unorganised sector.",
+          "fail_message": "PM-SYM is intended for unorganised workers; your answer does not meet that condition.",
+          "unknown_message": "Whether your work falls within the unorganised sector is not yet known.",
+          "question": "Do you work in the unorganised sector (for example, as a home-based worker, street vendor, domestic worker, agricultural worker, construction worker, or a similar occupation)?",
+          "priority": 10
+        },
+        {
+          "id": "pm_sym_age",
+          "field": "age",
+          "operator": "between_inclusive",
+          "value": [18, 40],
+          "effect": "require",
+          "description": "Entry age is from 18 through 40 years, inclusive.",
+          "pass_message": "Your age is within the official 18-to-40 entry-age range.",
+          "fail_message": "Your age is outside the official 18-to-40 entry-age range for PM-SYM.",
+          "unknown_message": "Your age is needed to apply the PM-SYM entry-age rule.",
+          "question": "What is your age in completed years?",
+          "priority": 20
+        },
+        {
+          "id": "pm_sym_monthly_income",
+          "field": "monthly_income",
+          "operator": "lte",
+          "value": 15000,
+          "effect": "require",
+          "description": "Monthly income is Rs 15,000 or less.",
+          "pass_message": "Your stated monthly income is within the official Rs 15,000 limit.",
+          "fail_message": "Your stated monthly income is above the official Rs 15,000 PM-SYM limit.",
+          "unknown_message": "Your monthly income is needed to apply the PM-SYM income limit.",
+          "question": "What is your approximate monthly income in rupees?",
+          "priority": 30
+        },
+        {
+          "id": "pm_sym_income_tax",
+          "field": "is_income_tax_payer",
+          "operator": "eq",
+          "value": true,
+          "effect": "disqualify",
+          "description": "An income-tax payer is excluded from new PM-SYM enrolment.",
+          "pass_message": "You indicated that you are not an income-tax payer.",
+          "fail_message": "The official PM-SYM eligibility conditions exclude income-tax payers.",
+          "unknown_message": "Your income-tax-payer status is needed to check this exclusion.",
+          "question": "Are you an income-tax payer?",
+          "priority": 40
+        },
+        {
+          "id": "pm_sym_epfo",
+          "field": "covered_by_epfo",
+          "operator": "eq",
+          "value": true,
+          "effect": "disqualify",
+          "description": "A worker covered by EPFO is excluded from PM-SYM.",
+          "pass_message": "You indicated that you are not covered by EPFO.",
+          "fail_message": "The official PM-SYM eligibility conditions exclude workers covered by EPFO.",
+          "unknown_message": "Whether you are covered by EPFO is not yet known.",
+          "question": "Are you currently covered by the Employees' Provident Fund Organisation (EPFO)?",
+          "priority": 50
+        },
+        {
+          "id": "pm_sym_esic",
+          "field": "covered_by_esic",
+          "operator": "eq",
+          "value": true,
+          "effect": "disqualify",
+          "description": "A worker covered by ESIC is excluded from PM-SYM.",
+          "pass_message": "You indicated that you are not covered by ESIC.",
+          "fail_message": "The official PM-SYM eligibility conditions exclude workers covered by ESIC.",
+          "unknown_message": "Whether you are covered by ESIC is not yet known.",
+          "question": "Are you currently covered by the Employees' State Insurance Corporation (ESIC)?",
+          "priority": 60
+        },
+        {
+          "id": "pm_sym_nps",
+          "field": "covered_by_nps",
+          "operator": "eq",
+          "value": true,
+          "effect": "disqualify",
+          "description": "A worker covered by the National Pension System condition stated on the official PM-SYM page is excluded.",
+          "pass_message": "You indicated that you are not covered by NPS for this exclusion check.",
+          "fail_message": "The official PM-SYM eligibility conditions exclude workers covered by the stated NPS condition.",
+          "unknown_message": "Whether you are covered by NPS is not yet known.",
+          "question": "Are you covered by the National Pension System (NPS)?",
+          "priority": 70
+        }
+      ],
+      "required_documents": [
+        "Aadhaar card",
+        "Savings-bank or Jan-Dhan account passbook",
+        "Self-certified enrolment form",
+        "Consent form for auto-debit from the linked account"
+      ],
+      "application_process": [
+        "Keep a mobile phone, Aadhaar number, and savings-bank or Jan-Dhan account details ready.",
+        "Visit the nearest Common Service Centre (CSC), or use the official Maandhan portal where self-enrolment is available.",
+        "Complete the self-certified enrolment and auto-debit consent.",
+        "Pay the first contribution at enrolment as instructed; later contributions are collected from the linked account.",
+        "Keep the receipt and the pension account/card details issued after enrolment."
+      ],
+      "official_portal_url": "https://maandhan.in/",
+      "helpline": "1800-267-6888",
+      "source": "Ministry of Labour & Employment, Government of India — PM-SYM scheme details",
+      "source_url": "https://www.labour.gov.in/offerings/schemes-and-services/details/pm-sym-QTOzATMtQWa",
+      "additional_sources": [
+        {
+          "title": "Ministry of Labour & Employment PM-SYM FAQ",
+          "url": "https://labour.gov.in/FAQ-0"
+        }
+      ],
+      "effective_date": "2019-02-15",
+      "last_verified": "2026-08-20",
+      "source_type": "official_government_webpage",
+      "status": "verified",
+      "verification_note": "This check is for a new enrolment and does not calculate the age-based contribution. The administering authority makes the final eligibility decision."
+    },
+    {
+      "id": "apy",
+      "name": "Atal Pension Yojana",
+      "short_name": "APY",
+      "aliases": [
+        "Atal Pension Scheme",
+        "government guaranteed pension",
+        "PFRDA APY"
+      ],
+      "description": "A voluntary pension scheme for eligible Indian citizens. The pension amount after age 60 depends on the selected pension slab and prescribed contributions.",
+      "benefit_summary": "Government-guaranteed minimum pension of Rs 1,000, 2,000, 3,000, 4,000, or 5,000 per month after age 60, depending on the selected slab and contributions.",
+      "target_group": "Indian citizens meeting the APY new-account conditions",
+      "eligibility_scope": "new_enrolment",
+      "jurisdiction": {
+        "country": "India",
+        "level": "central",
+        "states": ["ALL"]
+      },
+      "eligibility_rules": [
+        {
+          "id": "apy_citizenship",
+          "field": "is_indian_citizen",
+          "operator": "eq",
+          "value": true,
+          "effect": "require",
+          "description": "APY is open to Indian citizens.",
+          "pass_message": "You indicated that you are an Indian citizen.",
+          "fail_message": "APY is open to Indian citizens; your answer does not meet this condition.",
+          "unknown_message": "Citizenship is needed to check the APY condition.",
+          "question": "Are you an Indian citizen?",
+          "priority": 10
+        },
+        {
+          "id": "apy_age",
+          "field": "age",
+          "operator": "between_inclusive",
+          "value": [18, 40],
+          "effect": "require",
+          "description": "Entry age is from 18 through the 40th birthday.",
+          "pass_message": "Your age is within the official APY entry-age range.",
+          "fail_message": "Your age is outside the official APY entry-age range of 18 through the 40th birthday.",
+          "unknown_message": "Your age is needed to apply the APY entry-age rule.",
+          "question": "What is your age in completed years?",
+          "priority": 20
+        },
+        {
+          "id": "apy_savings_account",
+          "field": "has_savings_account",
+          "operator": "eq",
+          "value": true,
+          "effect": "require",
+          "description": "The applicant has a savings-bank or post-office savings-bank account.",
+          "pass_message": "You indicated that you have the required savings-bank or post-office savings account.",
+          "fail_message": "A savings-bank or post-office savings-bank account is mandatory for APY enrolment.",
+          "unknown_message": "Whether you have a savings-bank or post-office savings account is not yet known.",
+          "question": "Do you have a savings-bank account or post-office savings-bank account?",
+          "priority": 30
+        },
+        {
+          "id": "apy_income_tax",
+          "field": "is_or_has_been_income_tax_payer",
+          "operator": "eq",
+          "value": true,
+          "effect": "disqualify",
+          "description": "For a new account from 1 October 2022, a citizen who is or has been an income-tax payer as on the application date is excluded.",
+          "pass_message": "You indicated that you are not, and have not been, an income-tax payer as on the application date.",
+          "fail_message": "For new APY accounts from 1 October 2022, a person who is or has been an income-tax payer as on the application date is not eligible to join.",
+          "unknown_message": "Your income-tax-payer history as on the application date is needed for the APY check.",
+          "question": "As on the application date, are you or have you ever been an income-tax payer under the Income-tax Act, 1961?",
+          "priority": 40
+        },
+        {
+          "id": "apy_existing_account",
+          "field": "already_has_apy_account",
+          "operator": "eq",
+          "value": true,
+          "effect": "disqualify",
+          "description": "An individual may open only one APY account.",
+          "pass_message": "You indicated that you do not already have an APY account.",
+          "fail_message": "The official APY FAQ states that an individual may open only one APY account.",
+          "unknown_message": "Whether you already have an APY account is not yet known.",
+          "question": "Do you already have an Atal Pension Yojana account?",
+          "priority": 50
+        }
+      ],
+      "required_documents": [
+        "Savings-bank or post-office savings-bank account details (mandatory)",
+        "Nominee details (mandatory)",
+        "Proof of possession of Aadhaar or Aadhaar-enrolment details; the official FAQ says Aadhaar details may be supplied after enrolment if not supplied initially",
+        "Physical APY account-opening and auto-debit form when applying through a branch; e-APY uses a digital process"
+      ],
+      "application_process": [
+        "Approach the bank branch or post office where your savings account is held, or first open an eligible savings account.",
+        "Alternatively, follow the e-APY digital onboarding option linked from PFRDA's official APY information.",
+        "Choose a pension slab and contribution frequency, provide nominee details, and authorise auto-debit.",
+        "Submit Aadhaar details at enrolment or in due course as described in the official FAQ.",
+        "Keep sufficient funds in the linked account for the prescribed contribution."
+      ],
+      "official_portal_url": "https://pfrda.org.in/web/pfrda/schemes/atal-pension-yojana-apy",
+      "helpline": "1800-110-069 (prospective subscribers); 1800-889-1030 (existing subscribers)",
+      "source": "Pension Fund Regulatory and Development Authority — Atal Pension Yojana FAQ",
+      "source_url": "https://pfrda.org.in/w/faqs/atal-pension-yojana",
+      "additional_sources": [
+        {
+          "title": "PFRDA APY scheme overview",
+          "url": "https://pfrda.org.in/web/pfrda/schemes/atal-pension-yojana-apy"
+        },
+        {
+          "title": "PFRDA notice confirming APY continuation through 2030-31",
+          "url": "https://www.pfrda.org.in/en/web/pfrda/w/cabinet-approves-continuation-of-atal-pension-yojana-apy-and-extension-of-funding-support-for-promotional-and-developmental-activities-and-gap-funding-till-2030-31"
+        }
+      ],
+      "effective_date": "2015-06-01",
+      "last_verified": "2026-08-20",
+      "source_type": "official_statutory_regulator_webpage",
+      "status": "verified",
+      "verification_note": "This check is for opening a new APY account. The income-tax exclusion does not cancel accounts opened on or before 30 September 2022 merely because the subscriber was or later became an income-tax payer."
+    },
+    {
+      "id": "pm-kisan",
+      "name": "Pradhan Mantri Kisan Samman Nidhi",
+      "short_name": "PM-KISAN",
+      "aliases": [
+        "PM Kisan Samman Nidhi",
+        "farmer income support",
+        "Kisan Samman"
+      ],
+      "description": "A Central Sector income-support scheme for eligible landholding farmer families with cultivable land, subject to the official exclusion categories and State/UT verification.",
+      "benefit_summary": "Rs 6,000 per year paid by direct benefit transfer in three equal instalments to eligible farmer families, subject to exclusions and verification.",
+      "target_group": "Eligible landholding farmer families",
+      "eligibility_scope": "new_or_current_beneficiary_verification",
+      "jurisdiction": {
+        "country": "India",
+        "level": "central_with_state_verification",
+        "states": ["ALL"]
+      },
+      "eligibility_rules": [
+        {
+          "id": "pm_kisan_landholding_family",
+          "field": "is_landholding_farmer_family",
+          "operator": "eq",
+          "value": true,
+          "effect": "require",
+          "description": "The applicant belongs to a farmer family owning cultivable land under the concerned State/UT land-record system or an approved State-specific identification mechanism.",
+          "pass_message": "You indicated that your farmer family owns cultivable land under the applicable State/UT identification system.",
+          "fail_message": "PM-KISAN is for landholding farmer families with cultivable land under the applicable State/UT identification system.",
+          "unknown_message": "Your family's cultivable-land status under the State/UT system is needed.",
+          "question": "Does your farmer family own cultivable land under your State/UT land records or an officially approved local identification mechanism?",
+          "priority": 10
+        },
+        {
+          "id": "pm_kisan_post_cutoff_transfer",
+          "field": "land_acquired_after_2019_02_01_other_than_inheritance",
+          "operator": "eq",
+          "value": true,
+          "effect": "disqualify",
+          "description": "The official guidelines and current portal flag post-1-February-2019 land acquisition other than qualifying succession/inheritance for exclusion or verification.",
+          "pass_message": "You did not report a post-1-February-2019 acquisition that falls outside the stated inheritance/succession exception.",
+          "fail_message": "Land acquired after 1 February 2019 other than through the stated inheritance/succession exception is flagged as ineligible or requiring official verification under the scheme guidance.",
+          "unknown_message": "How and when the cultivable land was acquired is needed for this check.",
+          "question": "Was the cultivable land acquired after 1 February 2019 for a reason other than inheritance/succession following a landholder's death?",
+          "priority": 20
+        },
+        {
+          "id": "pm_kisan_institutional_landholder",
+          "field": "is_institutional_landholder",
+          "operator": "eq",
+          "value": true,
+          "effect": "disqualify",
+          "description": "Institutional landholders are excluded.",
+          "pass_message": "You indicated that the landholder is not an institution.",
+          "fail_message": "All institutional landholders are excluded under the PM-KISAN operational guidelines.",
+          "unknown_message": "Whether the landholder is an institution is not yet known.",
+          "question": "Is the cultivable land held by an institution rather than an individual farmer family?",
+          "priority": 30
+        },
+        {
+          "id": "pm_kisan_constitutional_post",
+          "field": "family_member_holds_or_held_constitutional_post",
+          "operator": "eq",
+          "value": true,
+          "effect": "disqualify",
+          "description": "Farmer families with a former or present holder of a constitutional post are excluded.",
+          "pass_message": "You indicated that no family member is a former or present holder of a constitutional post.",
+          "fail_message": "The PM-KISAN guidelines exclude a farmer family when a member is a former or present holder of a constitutional post.",
+          "unknown_message": "Whether a family member holds or held a constitutional post is not yet known.",
+          "question": "Does any member of the farmer family currently hold, or formerly hold, a constitutional post?",
+          "priority": 40
+        },
+        {
+          "id": "pm_kisan_elected_office",
+          "field": "family_member_in_excluded_elected_office",
+          "operator": "eq",
+          "value": true,
+          "effect": "disqualify",
+          "description": "Specified former and present ministers, legislators, municipal-corporation mayors, and district-panchayat chairpersons trigger exclusion.",
+          "pass_message": "You indicated that no family member falls within the specified elected-office exclusion.",
+          "fail_message": "The PM-KISAN guidelines exclude farmer families containing a member in one of the specified former or present elected offices.",
+          "unknown_message": "Whether a family member falls within the specified elected-office categories is not yet known.",
+          "question": "Is any family member a former or present Minister/State Minister, MP, State legislator, Mayor of a Municipal Corporation, or Chairperson of a District Panchayat?",
+          "priority": 50
+        },
+        {
+          "id": "pm_kisan_government_employee",
+          "field": "family_member_is_non_exempt_government_employee",
+          "operator": "eq",
+          "value": true,
+          "effect": "disqualify",
+          "description": "Specified serving or retired government, PSE, autonomous-institution, and regular local-body personnel are excluded; Multi Tasking Staff, Class IV, and Group D employees are excepted by the guideline.",
+          "pass_message": "You indicated that no family member falls within the non-exempt government-employee exclusion.",
+          "fail_message": "The PM-KISAN guidelines exclude the specified serving or retired government-related employees, except the stated Multi Tasking Staff/Class IV/Group D categories.",
+          "unknown_message": "Whether a family member falls within the non-exempt government-employee category is not yet known.",
+          "question": "Does any family member fall within the specified serving/retired government, PSE, autonomous-institution, or regular local-body employee categories, excluding Multi Tasking Staff/Class IV/Group D?",
+          "priority": 60
+        },
+        {
+          "id": "pm_kisan_pensioner",
+          "field": "family_member_is_non_exempt_pensioner_10000_or_more",
+          "operator": "eq",
+          "value": true,
+          "effect": "disqualify",
+          "description": "A superannuated or retired pensioner receiving Rs 10,000 or more per month triggers exclusion, except the stated Multi Tasking Staff/Class IV/Group D categories.",
+          "pass_message": "You indicated that no family member falls within the non-exempt pensioner exclusion.",
+          "fail_message": "The PM-KISAN guidelines exclude a farmer family with a non-exempt retired pensioner receiving Rs 10,000 or more per month.",
+          "unknown_message": "Whether a family member falls within the non-exempt pensioner category is not yet known.",
+          "question": "Does any non-exempt retired family member receive a monthly pension of Rs 10,000 or more (excluding the stated Multi Tasking Staff/Class IV/Group D categories)?",
+          "priority": 70
+        },
+        {
+          "id": "pm_kisan_income_tax",
+          "field": "family_member_paid_income_tax_last_assessment_year",
+          "operator": "eq",
+          "value": true,
+          "effect": "disqualify",
+          "description": "A farmer family is excluded if a member paid income tax in the last assessment year.",
+          "pass_message": "You indicated that no family member paid income tax in the last assessment year.",
+          "fail_message": "The PM-KISAN guidelines exclude a farmer family if a member paid income tax in the last assessment year.",
+          "unknown_message": "The farmer family's income-tax status for the last assessment year is not yet known.",
+          "question": "Did any member of the farmer family pay income tax in the last assessment year?",
+          "priority": 80
+        },
+        {
+          "id": "pm_kisan_professional",
+          "field": "family_member_is_practising_registered_professional",
+          "operator": "eq",
+          "value": true,
+          "effect": "disqualify",
+          "description": "Practising doctors, engineers, lawyers, chartered accountants, and architects registered with professional bodies trigger exclusion.",
+          "pass_message": "You indicated that no family member falls within the practising registered-professional exclusion.",
+          "fail_message": "The PM-KISAN guidelines exclude farmer families containing a practising professional in one of the specified registered categories.",
+          "unknown_message": "Whether a family member is a practising professional in a specified registered category is not yet known.",
+          "question": "Is any family member practising as a doctor, engineer, lawyer, chartered accountant, or architect registered with the relevant professional body?",
+          "priority": 90
+        },
+        {
+          "id": "pm_kisan_nri",
+          "field": "family_is_nri_for_new_beneficiary_rule",
+          "operator": "eq",
+          "value": true,
+          "effect": "disqualify",
+          "description": "For new beneficiaries, landholding farmer families that are NRIs under the Income-tax Act are excluded.",
+          "pass_message": "You indicated that the farmer family is not an NRI family for this new-beneficiary rule.",
+          "fail_message": "The revised PM-KISAN guidelines exclude new-beneficiary landholding farmer families that are NRIs under the Income-tax Act.",
+          "unknown_message": "The farmer family's NRI status for the new-beneficiary rule is not yet known.",
+          "question": "For a new-beneficiary application, is the landholding farmer family non-resident under the Income-tax Act?",
+          "priority": 100
+        }
+      ],
+      "required_documents": [
+        "Aadhaar number/card for identity authentication and mandatory eKYC",
+        "Bank account number and IFSC details for direct benefit transfer",
+        "Applicable State/UT cultivable-land record or proof accepted under an approved State-specific identification mechanism",
+        "Self-declaration covering the official exclusion categories"
+      ],
+      "application_process": [
+        "Use New Farmer Registration on the official PM-KISAN portal, or follow the beneficiary-identification process provided by the concerned State/UT.",
+        "Authenticate Aadhaar and provide the requested mobile, bank, family, and cultivable-land information.",
+        "Provide the exclusion-category self-declaration and any land proof required by the State/UT authority.",
+        "Complete mandatory eKYC through OTP on the portal/mobile app, biometric authentication at a CSC/State Seva Kendra, or an officially available face-authentication method.",
+        "The State/UT authority verifies landholding and eligibility before approval; use Know Your Status on the official portal to follow the result."
+      ],
+      "official_portal_url": "https://pmkisan.gov.in/",
+      "helpline": null,
+      "contact_guidance": "Use the Help-Desk and State Nodal Officer links on the official PM-KISAN Contact Us page: https://pmkisan.gov.in/Contacts.aspx",
+      "source": "Department of Agriculture & Farmers Welfare — Revised PM-KISAN Operational Guidelines",
+      "source_url": "https://pmkisan.gov.in/Documents/RevisedPM-KISANOperationalGuidelines%28English%29.pdf",
+      "additional_sources": [
+        {
+          "title": "Official PM-KISAN portal and current eligibility-verification notices",
+          "url": "https://pmkisan.gov.in/"
+        },
+        {
+          "title": "Official New Farmer Registration form",
+          "url": "https://pmkisan.gov.in/RegistrationFormupdated.aspx"
+        },
+        {
+          "title": "Official note on PM-KISAN eKYC modes",
+          "url": "https://pmkisan.gov.in/Documents/Note-on-Modes-and-processes-of-ekyc-13th-Nov-English.pdf"
+        }
+      ],
+      "effective_date": "2019-02-01",
+      "last_verified": "2026-08-20",
+      "source_type": "official_government_guidelines",
+      "status": "verified_with_state_verification",
+      "verification_note": "State/UT land records and approved local identification mechanisms control beneficiary identification. This engine cannot validate land records, Aadhaar, eKYC, family composition, or official databases; final eligibility requires State/UT and scheme verification."
+    }
+  ]
+}

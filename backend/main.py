@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.config import get_settings
-from backend.routers import cases, forms, guided, legal, voice
+from backend.routers import cases, cpgrams, forms, guided, legal, rti, schemes, voice
 from backend.utils.errors import ApiError, api_error_handler, generic_error_handler
 from backend.utils.logger import setup_logging
 
@@ -106,6 +106,9 @@ app.include_router(voice.router)
 app.include_router(cases.router)
 app.include_router(forms.router)
 app.include_router(openclaw.router)
+app.include_router(rti.router)
+app.include_router(schemes.router)
+app.include_router(cpgrams.router)
 
 
 @app.get("/")
@@ -128,6 +131,10 @@ async def root() -> dict:
             "forms": "GET /api/form/portals, POST /api/form/start",
             "openclaw": "GET /api/openclaw/portals, POST /api/openclaw/file, GET /api/openclaw/status/{id}, POST /api/openclaw/otp",
             "nyaya": "POST /api/nyaya/query, GET /api/nyaya/statute/{code}, POST /api/nyaya/extract-entities",
+            "rti": "POST /api/rti/identify-department, POST /api/rti/draft, POST /api/rti/download",
+            "schemes": "GET /api/schemes/list, POST /api/schemes/guided-check, POST /api/schemes/check-eligibility",
+            "civic_legal": "POST /api/legal/domains/query (consumer, tenant, labour)",
+            "cpgrams_assistant": "POST /api/cpgrams/prepare, GET /api/cpgrams/guide",
         },
     }
 

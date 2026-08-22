@@ -1,0 +1,210 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "Domain-separated civic and legal orientation records from primary Indian government sources.",
+    "last_verified": "2026-08-20",
+    "status": "verified"
+  },
+  "records": [
+    {
+      "id": "consumer-core-rights-and-remedies",
+      "domain": "consumer",
+      "title": "Consumer protection: defective goods, deficient services and unfair trade practices",
+      "summary": "The Consumer Protection Act, 2019 defines consumer disputes and provides remedies concerning defective goods, deficient services and unfair trade practices. Whether a person and transaction fall within the Act depends on the statutory definitions and facts, including the purpose for which goods or services were obtained.",
+      "guidance": [
+        "Preserve the invoice, order details, warranty, advertisements, messages and payment records.",
+        "Write a dated account of the defect, service failure or representation and the remedy already requested.",
+        "Check the statutory definitions and exclusions against the facts before choosing a consumer proceeding."
+      ],
+      "keywords": ["consumer", "defective", "defect", "deficiency", "service", "unfair trade practice", "refund", "seller", "invoice", "warranty"],
+      "jurisdiction": "India",
+      "source": "Consumer Protection Act, 2019 - India Code",
+      "source_url": "https://www.indiacode.nic.in/bitstream/123456789/12808/1/the_consumer_protection_act%2C_2019_no._35_of_2019_date_09.08.2019.pdf",
+      "effective_date": null,
+      "last_verified": "2026-08-20",
+      "source_type": "official_legislation",
+      "document_type": "act",
+      "status": "verified"
+    },
+    {
+      "id": "consumer-product-liability",
+      "domain": "consumer",
+      "title": "Product liability under the Consumer Protection Act, 2019",
+      "summary": "Chapter VI of the Consumer Protection Act, 2019 provides a product-liability framework involving product manufacturers, product service providers and product sellers, subject to the requirements and exceptions in the Act. Liability cannot be determined from a product failure alone without the relevant facts and evidence.",
+      "guidance": [
+        "Keep the product, packaging, model or serial details, purchase record and photographs where safe to do so.",
+        "Record the damage or harm and any inspection, repair or expert material.",
+        "Review the Act's party-specific requirements and exceptions before alleging product liability."
+      ],
+      "keywords": ["product liability", "manufacturer", "seller", "unsafe product", "defective product", "injury", "warranty"],
+      "jurisdiction": "India",
+      "source": "Consumer Protection Act, 2019 - India Code",
+      "source_url": "https://www.indiacode.nic.in/bitstream/123456789/12808/1/the_consumer_protection_act%2C_2019_no._35_of_2019_date_09.08.2019.pdf",
+      "effective_date": null,
+      "last_verified": "2026-08-20",
+      "source_type": "official_legislation",
+      "document_type": "act",
+      "status": "verified"
+    },
+    {
+      "id": "consumer-redressal-pathway",
+      "domain": "consumer",
+      "title": "Consumer pre-litigation and online redressal pathways",
+      "summary": "The National Consumer Helpline describes itself as a pre-litigation grievance mechanism. The Department of Consumer Affairs' e-Jagriti platform provides digital consumer-case services. The appropriate forum and territorial or pecuniary jurisdiction must be checked using current official rules and the facts of the transaction.",
+      "guidance": [
+        "Consider first sending the seller or service provider a clear written grievance with the remedy sought.",
+        "Use the official National Consumer Helpline or e-Jagriti information to understand the available pathway.",
+        "Verify current filing rules, limitation, jurisdiction and required documents before submitting a case."
+      ],
+      "keywords": ["consumer complaint", "national consumer helpline", "NCH", "e-jagriti", "commission", "forum", "redressal", "file complaint"],
+      "jurisdiction": "India",
+      "source": "National Consumer Helpline - Department of Consumer Affairs",
+      "source_url": "https://consumerhelpline.gov.in/public/about",
+      "effective_date": null,
+      "last_verified": "2026-08-20",
+      "source_type": "official_government_portal",
+      "document_type": "official_guidance",
+      "status": "verified"
+    },
+    {
+      "id": "tenant-jurisdiction-warning",
+      "domain": "tenant",
+      "title": "Tenancy rules are State/UT specific",
+      "summary": "Land and tenancy regulation are substantially State/UT matters. The Union Government's Model Tenancy Act, 2021 was circulated as a model for States and Union Territories to adopt through new legislation or amendment; it is not a single automatically applicable tenancy code for all of India.",
+      "guidance": [
+        "Provide the State or Union Territory and city before relying on a tenancy rule.",
+        "Identify the locally applicable rent or tenancy law and check whether the premises and tenancy are covered.",
+        "Keep the rent agreement, rent receipts, deposit proof, notices and condition photographs."
+      ],
+      "keywords": ["tenant", "landlord", "rent", "eviction", "deposit", "tenancy", "rent agreement", "model tenancy act"],
+      "jurisdiction": "State/UT-specific",
+      "source": "Ministry of Housing and Urban Affairs / PIB - Model Tenancy Act adoption status",
+      "source_url": "https://www.pib.gov.in/newsite/PrintRelease.aspx?lang=2&reg=48&relid=227991",
+      "effective_date": null,
+      "last_verified": "2026-08-20",
+      "source_type": "official_government_guidance",
+      "document_type": "official_status_note",
+      "status": "requires_jurisdiction"
+    },
+    {
+      "id": "tenant-transfer-property-baseline",
+      "domain": "tenant",
+      "title": "Lease baseline under the Transfer of Property Act, 1882",
+      "summary": "The Transfer of Property Act contains a general framework for leases of immovable property, including provisions on the duration and termination of certain leases and lessor/lessee rights and liabilities. Its application can be displaced or supplemented by contract, local law, usage and State/UT rent legislation.",
+      "guidance": [
+        "Read the signed lease and all notices alongside the applicable State/UT law.",
+        "Do not assume a notice period or eviction ground without checking the property, contract and local statute.",
+        "Seek jurisdiction-specific legal assistance before acting on eviction, possession or deposit disputes."
+      ],
+      "keywords": ["lease", "rent agreement", "notice", "termination", "lessor", "lessee", "possession", "eviction"],
+      "jurisdiction": "India, subject to State/UT and local law",
+      "source": "Transfer of Property Act, 1882 - India Code",
+      "source_url": "https://www.indiacode.nic.in/bitstream/123456789/2338/1/A1882-04.pdf",
+      "effective_date": null,
+      "last_verified": "2026-08-20",
+      "source_type": "official_legislation",
+      "document_type": "act",
+      "status": "requires_jurisdiction"
+    },
+    {
+      "id": "labour-codes-commencement",
+      "domain": "labour",
+      "title": "Four Labour Codes brought into force",
+      "summary": "The Ministry of Labour and Employment announced that the Code on Wages, 2019, Industrial Relations Code, 2020, Code on Social Security, 2020, and Occupational Safety, Health and Working Conditions Code, 2020 were brought into force from 21 November 2025. The applicable right and forum still depend on coverage, rules, notifications and the worker's facts.",
+      "guidance": [
+        "Identify the employer, establishment, work location, role, dates and employment arrangement.",
+        "Preserve appointment documents, wage slips, attendance, bank entries, messages and termination records.",
+        "Check the current Central or State rules and the competent labour authority for the establishment."
+      ],
+      "keywords": ["labour code", "employment", "worker", "employee", "employer", "workplace", "labour law"],
+      "jurisdiction": "India, with Central/State implementation details",
+      "source": "Ministry of Labour and Employment - Implementation of Labour Codes",
+      "source_url": "https://labour.gov.in/sites/default/files/pib2206144.pdf",
+      "effective_date": "2025-11-21",
+      "last_verified": "2026-08-20",
+      "source_type": "official_government_notification_summary",
+      "document_type": "official_release",
+      "status": "verified"
+    },
+    {
+      "id": "labour-wages",
+      "domain": "labour",
+      "title": "Wage rights and claims",
+      "summary": "The Code on Wages, 2019 consolidates statutory subjects including minimum wages, payment of wages, bonuses and equal remuneration. The amount due and enforcement route depend on coverage, wage period, applicable government and notified rates or rules; this record does not supply an unverified wage rate.",
+      "guidance": [
+        "Record the work period, agreed wage, amount paid, deductions and dates of payment.",
+        "Preserve wage slips, attendance, bank statements, contractor details and communications.",
+        "Verify the currently notified wage rate and competent authority for the work and location."
+      ],
+      "keywords": ["wage", "salary", "minimum wage", "unpaid", "deduction", "bonus", "equal remuneration", "pay"],
+      "jurisdiction": "India, with government- and location-specific rates/rules",
+      "source": "Code on Wages, 2019 - India Code",
+      "source_url": "https://www.indiacode.nic.in/indiacode/handle/123456789/15793?view_type=browse",
+      "effective_date": "2025-11-21",
+      "last_verified": "2026-08-20",
+      "source_type": "official_legislation",
+      "document_type": "code",
+      "status": "requires_verification"
+    },
+    {
+      "id": "labour-layoff-retrenchment",
+      "domain": "labour",
+      "title": "Lay-off, retrenchment and industrial disputes",
+      "summary": "The Industrial Relations Code, 2020 addresses trade unions, standing orders and industrial disputes, including lay-off and retrenchment concepts. Coverage, worker status, establishment details, applicable thresholds, procedure and remedies must be assessed from the current Code, rules and notifications rather than assumed from a job-loss label.",
+      "guidance": [
+        "Collect the appointment terms, role description, service history, wage records and termination communication.",
+        "Record the employer or contractor entity, establishment size if known, work location and reason given.",
+        "Verify coverage and the competent conciliation, tribunal or other authority before filing."
+      ],
+      "keywords": ["retrenchment", "layoff", "lay-off", "termination", "industrial dispute", "dismissed", "job loss", "standing orders"],
+      "jurisdiction": "India, with Central/State implementation details",
+      "source": "Industrial Relations Code, 2020 - India Code",
+      "source_url": "https://www.indiacode.nic.in/bitstream/123456789/22040/1/A2020-35.pdf",
+      "effective_date": "2025-11-21",
+      "last_verified": "2026-08-20",
+      "source_type": "official_legislation",
+      "document_type": "code",
+      "status": "requires_verification"
+    },
+    {
+      "id": "labour-social-security",
+      "domain": "labour",
+      "title": "EPF, ESI and maternity-related social-security coverage",
+      "summary": "The Code on Social Security, 2020 consolidates social-security subjects including employees' provident fund, employees' state insurance and maternity benefit. A worker's entitlement or contribution position depends on the applicable chapter, establishment and employee coverage, wages, rules and notifications.",
+      "guidance": [
+        "Identify the establishment, employee or account identifiers, wage records and contribution history.",
+        "Preserve payslips, contribution statements, medical or maternity records relevant to the issue, and employer correspondence.",
+        "Use the relevant official EPFO, ESIC or labour-authority channel only after verifying coverage and the requested remedy."
+      ],
+      "keywords": ["EPF", "provident fund", "ESI", "insurance", "maternity", "social security", "contribution", "UAN"],
+      "jurisdiction": "India, with scheme- and coverage-specific rules",
+      "source": "Code on Social Security, 2020 - India Code",
+      "source_url": "https://www.indiacode.nic.in/handle/123456789/16823?locale=en",
+      "effective_date": "2025-11-21",
+      "last_verified": "2026-08-20",
+      "source_type": "official_legislation",
+      "document_type": "code",
+      "status": "requires_verification"
+    },
+    {
+      "id": "labour-posh",
+      "domain": "labour",
+      "title": "Sexual harassment at the workplace (POSH)",
+      "summary": "The Sexual Harassment of Women at Workplace (Prevention, Prohibition and Redressal) Act, 2013 establishes a statutory prevention and redressal framework, including Internal Committees and Local Committees as provided by the Act. The appropriate path depends on the workplace, respondent, committee availability, dates and requested protection.",
+      "guidance": [
+        "Prioritise immediate safety and preserve messages, emails, witness details and a dated incident record.",
+        "Identify whether an Internal Committee exists and obtain its official policy or contact information.",
+        "Check the Act and current official rules for the proper committee, process and timing; seek support if safety or retaliation is a concern."
+      ],
+      "keywords": ["sexual harassment", "POSH", "workplace harassment", "internal committee", "local committee", "retaliation"],
+      "jurisdiction": "India",
+      "source": "Sexual Harassment of Women at Workplace Act, 2013 - India Code",
+      "source_url": "https://www.indiacode.nic.in/handle/123456789/2104?locale=en",
+      "effective_date": null,
+      "last_verified": "2026-08-20",
+      "source_type": "official_legislation",
+      "document_type": "act",
+      "status": "verified"
+    }
+  ]
+}

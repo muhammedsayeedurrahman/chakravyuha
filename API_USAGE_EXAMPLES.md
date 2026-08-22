@@ -1,6 +1,6 @@
 # Phase 2 API Usage Patterns
 
-**Copy-paste ready examples for all 5 features**
+**Examples for the legacy features and the integrated civic-action workflows**
 
 ---
 
@@ -448,6 +448,85 @@ print("\n✅ Complete case assessment ready!")
 
 ---
 
+## Civic-action examples
+
+### RTI: route, review, and draft
+
+```python
+import requests
+
+payload = {
+    "issue": "The municipal road near my home has not been repaired for two years",
+    "state": "Delhi",
+    "city": "Delhi",
+    "locality": "Ward 1",
+    "road_type": "municipal road",
+    "date_range": "1 January 2024 to 31 December 2025",
+    "applicant_name": "A Citizen",
+    "applicant_address": "Ward 1, Delhi",
+    "is_indian_citizen": True,
+}
+
+draft = requests.post("http://localhost:8000/api/rti/draft", json=payload).json()
+print(draft["routing"]["likely_authority"], draft["routing"]["confidence"])
+print(draft["information_requests"])
+print(draft["document_text"])
+
+# The download endpoint returns 409 until all required details are present.
+download = requests.post("http://localhost:8000/api/rti/download", json=payload)
+download.raise_for_status()
+open("rti-application.txt", "wb").write(download.content)
+```
+
+### Schemes: ask targeted questions, then evaluate
+
+```python
+guided = requests.post(
+    "http://localhost:8000/api/schemes/guided-check",
+    json={"profile": {"age": 30}, "max_questions": 3},
+).json()
+print(guided["next_questions"])
+
+result = requests.post(
+    "http://localhost:8000/api/schemes/check-eligibility",
+    json={
+        "scheme_id": "pm-sym",
+        "profile": {
+            "age": 30,
+            "monthly_income": 12000,
+            "is_unorganised_worker": True,
+            "is_income_tax_payer": False,
+            "covered_by_epfo": False,
+            "covered_by_esic": False,
+            "covered_by_nps": False,
+        },
+    },
+).json()["results"][0]
+print(result["status"], result["matched_conditions"], result["provenance"])
+```
+
+### CPGRAMS preparation and tenant query
+
+```python
+grievance = requests.post(
+    "http://localhost:8000/api/cpgrams/prepare",
+    json={
+        "grievance": "The municipal road has dangerous potholes and prior complaints were ignored",
+        "state": "Delhi",
+        "district": "New Delhi",
+        "locality": "Ward 1",
+    },
+).json()
+print(grievance["missing_information"], grievance.get("draft"))
+# This prepares only; it does not submit to CPGRAMS.
+
+tenant = requests.post(
+    "http://localhost:8000/api/legal/domains/query",
+    json={"query": "My landlord threatens eviction", "domain": "tenant"},
+).json()
+print(tenant["confidence"], tenant["missing_information"], tenant["results"])
+```
+
 ## 🛠️ Testing Payloads (Copy-Paste Ready)
 
 ### Minimum Valid Payload (All Endpoints)
@@ -488,4 +567,4 @@ print("\n✅ Complete case assessment ready!")
 
 ---
 
-**All examples tested and working!** ✅
+The civic examples above are covered by API smoke tests. Legacy examples may depend on optional model, corpus, or portal configuration and should be verified in the target environment.

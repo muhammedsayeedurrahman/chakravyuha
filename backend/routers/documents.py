@@ -26,7 +26,7 @@ class PartyRequest(BaseModel):
 
 class DocumentGenerationRequest(BaseModel):
     """Request to generate a legal document."""
-    document_type: str = Field(..., description="FIR, LEGAL_NOTICE, or COMPLAINT")
+    document_type: str = Field(..., description="FIR, LEGAL_NOTICE, COMPLAINT, or RTI_APPLICATION")
     complainant: PartyRequest
     accused: PartyRequest
     case_type: str = Field(..., description="Type of case (e.g., Theft, Assault)")
@@ -36,6 +36,10 @@ class DocumentGenerationRequest(BaseModel):
     offense_sections: List[str] = Field(..., description="BNS section codes")
     evidence: Optional[List[str]] = []
     witnesses: Optional[List[str]] = []
+    response_deadline: Optional[str] = Field(
+        default=None,
+        description="Optional reviewed response date/period; no universal deadline is assumed",
+    )
 
 
 class DocumentResponse(BaseModel):
@@ -241,12 +245,13 @@ async def draft_legal_notice(request: DocumentGenerationRequest):
 @router.post("/draft-complaint", response_model=DocumentResponse)
 async def draft_complaint(request: DocumentGenerationRequest):
     """
-    Generate a consumer/civil complaint.
+    Generate the existing generic complaint-petition template.
     
-    **Use case**: Consumer disputes, civil matters
-    **Output**: Complaint petition ready for filing
+    **Use case**: A reviewed complaint-petition starting point
+    **Output**: Editable complaint petition
     
-    Use this for consumer complaints or civil cases, not criminal complaints.
+    This template contains court-facing language and is not represented as a
+    ready-to-file consumer complaint. Verify the forum, relief and legal basis.
     """
     try:
         context = _create_context(request)
@@ -301,8 +306,13 @@ async def list_templates():
             },
             {
                 "name": "COMPLAINT",
-                "description": "Complaint petition for civil/consumer cases",
-                "use_case": "Consumer disputes, civil matters",
+                "description": "Generic complaint petition; review forum and legal basis before use",
+                "use_case": "Existing complaint workflow",
+            },
+            {
+                "name": "RTI_APPLICATION",
+                "description": "Information request addressed to a Public Information Officer",
+                "use_case": "Use the guided /api/rti workflow to verify authority and generate it",
             },
         ]
     }
@@ -334,6 +344,11 @@ async def document_help():
                 "path": "/api/documents/draft-complaint",
                 "description": "Generate complaint (manual fields)",
             },
+            {
+                "method": "POST",
+                "path": "/api/rti/draft",
+                "description": "Prepare a jurisdiction-aware RTI application using this document engine",
+            },
         ],
     }
 
@@ -362,4 +377,5 @@ def _create_context(request: DocumentGenerationRequest) -> CaseContext:
         offense_sections=request.offense_sections,
         evidence=request.evidence or [],
         witnesses=request.witnesses or [],
+        response_deadline=request.response_deadline,
     )

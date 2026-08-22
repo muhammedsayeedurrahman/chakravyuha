@@ -53,6 +53,8 @@ CONSUMER_HELPLINE_CONFIG = PortalConfig(
             name="Submit registration",
             action=StepAction.CLICK,
             selectors={"submit": "button[type='submit'], input[type='submit'], #registerBtn"},
+            wait_after="input#otp, input[name='otp']",
+            requires_confirmation=True,
         ),
         PortalStep(
             name="Enter OTP for verification",

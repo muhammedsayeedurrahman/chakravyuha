@@ -6,6 +6,23 @@
 
 ---
 
+## Problem Statement 3 implementation status (2026-08-20)
+
+- [x] RTI authority-hint routing with explicit uncertainty and jurisdiction questions
+- [x] Record-seeking RTI transformation, shared document drafting, review, guidance, and download
+- [x] Deterministic PM-SYM, APY, and PM-KISAN eligibility with official-source provenance
+- [x] Targeted scheme questions, explanations, documents, and next application steps
+- [x] CPGRAMS classification, official exclusions, reviewable grievance, filing/tracking guidance
+- [x] OpenClaw CAPTCHA handoff and payload-bound confirmation immediately before external submission
+- [x] Domain-separated consumer, tenant, and labour corpus with jurisdiction/source metadata
+- [x] Guided-flow and intent-classifier handoffs for all six civic journeys
+- [x] Integrated single-page civic assistant frontend and API client
+- [x] Focused backend tests and frontend lint/type/build validation
+
+Safety note: the audit found contradictory records in the legacy criminal corpus and IPC/BNS mapping files. See `data/corpus_integrity_status.json`; those outputs require official verification and were not used as authority for the new civic records.
+
+---
+
 ## 📋 Immediate Action Items (Track Progress)
 
 ### CRITICAL - This Week (Unblock Core Testing)
@@ -314,7 +331,7 @@ python -c "from backend.legal.nyaya_extractor import NyayaEntityExtractor; ex = 
 - **Phase 2 (HIGH)**: Add legal intelligence (entity extraction, confidence filtering)
 - **Phase 3 (MEDIUM)**: Add agentic features (form-filling, case tracking)
 
-### What's NOT Included Yet?
+### Legacy roadmap items not addressed by the PS3 implementation
 
 - Police harassment detection (intent classification)
 - Defence strategy generation (LLM-based, high hallucination risk)

@@ -39,12 +39,28 @@ class CaseContext:
     offense_sections: List[str]  # e.g., ["BNS-315", "BNS-350"]
     evidence: List[str] = None
     witnesses: List[str] = None
+    response_deadline: Optional[str] = None
     
     def __post_init__(self):
         if self.evidence is None:
             self.evidence = []
         if self.witnesses is None:
             self.witnesses = []
+
+
+@dataclass
+class RTIContext:
+    """Structured, citizen-reviewed context for an RTI application."""
+
+    applicant_name: str
+    applicant_address: str
+    applicant_contact: str
+    public_authority: str
+    subject: str
+    information_requests: List[str]
+    location: str = ""
+    date_range: str = ""
+    citizenship_statement: str = "[Confirm citizenship eligibility before filing.]"
 
 
 class DocumentDrafter:
@@ -61,6 +77,7 @@ class DocumentDrafter:
             "FIR": self._default_fir_template(),
             "LEGAL_NOTICE": self._default_notice_template(),
             "COMPLAINT": self._default_complaint_template(),
+            "RTI_APPLICATION": self._default_rti_template(),
         }
     
     def draft_fir(self, context: CaseContext) -> str:
@@ -117,13 +134,17 @@ class DocumentDrafter:
             case_description=context.description,
             case_type=context.case_type,
             offense_sections=", ".join(context.offense_sections),
+            response_deadline=(
+                context.response_deadline
+                or "[Insert a legally reviewed response date or period]"
+            ),
         )
         
         return notice
     
     def draft_complaint(self, context: CaseContext) -> str:
         """
-        Generate a consumer complaint or civil complaint.
+        Generate the existing generic complaint-petition template.
         
         Args:
             context: Case context
@@ -146,8 +167,29 @@ class DocumentDrafter:
         )
         
         return complaint
+
+    def draft_rti_application(self, context: RTIContext) -> str:
+        """Generate an information-seeking RTI application, not a grievance."""
+        template = self.templates.get("RTI_APPLICATION", self._default_rti_template())
+        numbered_requests = "\n".join(
+            f"{index}. {request.strip()}"
+            for index, request in enumerate(context.information_requests, 1)
+            if request.strip()
+        )
+        return template.format(
+            date=datetime.now().strftime("%d/%m/%Y"),
+            applicant_name=context.applicant_name or "[Applicant name required before filing]",
+            applicant_address=context.applicant_address or "[Applicant address required before filing]",
+            applicant_contact=context.applicant_contact or "[Optional contact details]",
+            public_authority=context.public_authority or "[Public authority must be verified]",
+            subject=context.subject,
+            location=context.location or "[Relevant location, if applicable]",
+            date_range=context.date_range or "[Relevant period to be specified]",
+            citizenship_statement=context.citizenship_statement,
+            information_requests=numbered_requests or "1. [Specify the records or information sought]",
+        )
     
-    def get_document(self, doc_type: DocumentType, context: CaseContext) -> str:
+    def get_document(self, doc_type: DocumentType, context: CaseContext | RTIContext) -> str:
         """
         Get document based on type.
         
@@ -164,6 +206,10 @@ class DocumentDrafter:
             return self.draft_legal_notice(context)
         elif doc_type == DocumentType.COMPLAINT:
             return self.draft_complaint(context)
+        elif doc_type == DocumentType.RTI_APPLICATION:
+            if not isinstance(context, RTIContext):
+                raise TypeError("RTI_APPLICATION requires RTIContext")
+            return self.draft_rti_application(context)
         else:
             raise ValueError(f"Unknown document type: {doc_type}")
     
@@ -260,9 +306,11 @@ My client demands that you:
 2. Pay compensation for damages (if applicable)
 3. Refrain from causing further loss/injury
 
-You are required to comply with this notice within 30 (Thirty) days of 
-receipt of this notice. In case of non-compliance, legal action will be 
-initiated against you without any further notice.
+Requested response date or period: {response_deadline}
+
+The legally appropriate response period and proposed next action depend on the
+underlying claim, contract, governing law and forum. They must be reviewed before
+this notice is sent.
 
 Yours faithfully,
 
@@ -328,3 +376,38 @@ Signature: _____________________
 
 ================================================================================
 """
+
+    @staticmethod
+    def _default_rti_template() -> str:
+        """Plain-paper RTI application template using office designations only."""
+        return """
+RIGHT TO INFORMATION APPLICATION
+
+Date: {date}
+
+To,
+The Public Information Officer
+{public_authority}
+
+Subject: Request for information under section 6(1) of the Right to Information Act, 2005 - {subject}
+
+Relevant location: {location}
+Relevant period: {date_range}
+
+Sir/Madam,
+
+Please provide the following information/records held by or under the control of your public authority:
+
+{information_requests}
+
+Where any part of this request concerns records held by another public authority, please transfer that part in accordance with section 6(3) of the Act and inform me of the transfer. If any requested portion is withheld, please identify the statutory provision relied upon and provide the severable remainder, where applicable.
+
+{citizenship_statement} The requested records may be supplied in electronic form where they are already available in that form.
+
+Applicant:
+Name: {applicant_name}
+Address: {applicant_address}
+Contact: {applicant_contact}
+
+Signature: ____________________
+""".strip()

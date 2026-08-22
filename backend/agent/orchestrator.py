@@ -11,10 +11,14 @@ from backend.agent.escalation import check_escalation_needed, get_escalation_inf
 from backend.agent.hallucination_guard import sanitize_response
 from backend.agent.complaint_drafter_agent import ComplaintDrafterAgent
 from backend.agent.intent_classifier import (
+    INTENT_CIVIC_QUERY,
     INTENT_COMPLAINT_DRAFT,
+    INTENT_CPGRAMS,
     INTENT_ESCALATION,
     INTENT_GREETING,
     INTENT_GUIDED_FLOW,
+    INTENT_RTI,
+    INTENT_SCHEME_ELIGIBILITY,
     INTENT_SECTION_LOOKUP,
     classify_intent,
 )
@@ -129,12 +133,70 @@ class Orchestrator:
         if intent.intent == INTENT_COMPLAINT_DRAFT:
             return self._handle_complaint_draft(text, language, session_state)
 
+        if intent.intent in {
+            INTENT_RTI,
+            INTENT_SCHEME_ELIGIBILITY,
+            INTENT_CPGRAMS,
+            INTENT_CIVIC_QUERY,
+        }:
+            return self._handle_civic_handoff(
+                intent.intent, text, language, session_state
+            )
+
         # Default: legal query (also handles followup, general)
         return self._handle_legal_query(text, language, session_state)
 
     # ------------------------------------------------------------------
     # Intent handlers
     # ------------------------------------------------------------------
+
+    def _handle_civic_handoff(
+        self,
+        intent_name: str,
+        text: str,
+        language: str,
+        session_state: dict,
+    ) -> dict:
+        """Return a typed handoff instead of sending civic issues to criminal RAG."""
+        handoffs = {
+            INTENT_RTI: {
+                "journey": "rti",
+                "handler": "rti_assistant",
+                "message": (
+                    "Continue in the RTI assistant. It will identify missing jurisdiction "
+                    "details, propose record-focused questions, and show authority uncertainty."
+                ),
+            },
+            INTENT_SCHEME_ELIGIBILITY: {
+                "journey": "scheme_eligibility",
+                "handler": "scheme_eligibility",
+                "message": (
+                    "Continue in the scheme eligibility assistant for a deterministic, "
+                    "explainable check against sourced rules."
+                ),
+            },
+            INTENT_CPGRAMS: {
+                "journey": "cpgrams",
+                "handler": "cpgrams_assistant",
+                "message": (
+                    "Continue in the CPGRAMS grievance assistant to classify, complete, "
+                    "and review the grievance before any human-confirmed portal action."
+                ),
+            },
+            INTENT_CIVIC_QUERY: {
+                "journey": "civic",
+                "handler": "civic_legal_query",
+                "message": (
+                    "Continue in the civic/legal assistant. Authority and pathway depend "
+                    "on jurisdiction and will be marked uncertain when they require verification."
+                ),
+            },
+        }
+        handoff = handoffs[intent_name]
+        response = self._build_response(
+            handoff["message"], [], language, session_state, text
+        )
+        return {**response, "handoff": handoff}
 
     def _handle_greeting(
         self, text: str, language: str, session_state: dict
@@ -459,12 +521,16 @@ class Orchestrator:
                 "session_state": new_session,
             }
 
-        if result.get("type") == "free_text":
+        if result.get("type") in {"free_text", "handoff"}:
             return {
                 "terminal": False,
-                "type": "free_text",
+                "type": result.get("type"),
                 "prompt": result.get("prompt", ""),
                 "prompt_hi": result.get("prompt_hi", ""),
+                "handler": result.get("handler"),
+                "journey": result.get("journey"),
+                "summary": result.get("summary", ""),
+                "next_steps": result.get("next_steps", []),
                 "session_state": new_session,
             }
 

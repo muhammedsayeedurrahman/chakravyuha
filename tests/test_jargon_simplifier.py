@@ -117,3 +117,10 @@ def test_punishment_included(simplifier):
     
     assert "punishment" in result
     assert "jail" in result.get("punishment", "").lower() or "fine" in result.get("punishment", "").lower()
+
+
+def test_civic_glossary_terms_are_available(simplifier):
+    for term in ("Public Information Officer", "Deficiency", "Lessor", "Retrenchment"):
+        result = simplifier.simplify_term(term)
+        assert "No definition found" not in result["simple_explanation"]
+        assert result["legal_definition"]

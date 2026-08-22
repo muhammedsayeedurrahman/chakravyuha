@@ -11,6 +11,12 @@
       {"label": "Sexual Offence", "label_hi": "यौन अपराध", "next": "sexual_branch"},
       {"label": "Property Dispute", "label_hi": "संपत्ति विवाद", "next": "property_branch"},
       {"label": "Threat / Intimidation", "label_hi": "धमकी / डराना", "next": "threat_branch"},
+      {"label": "RTI / Public Records", "label_hi": "आरटीआई / सार्वजनिक रिकॉर्ड", "next": "rti_workflow"},
+      {"label": "Government Scheme Eligibility", "label_hi": "सरकारी योजना पात्रता", "next": "scheme_workflow"},
+      {"label": "Consumer Dispute", "label_hi": "उपभोक्ता विवाद", "next": "consumer_workflow"},
+      {"label": "Tenant / Landlord Issue", "label_hi": "किरायेदार / मकान मालिक समस्या", "next": "tenant_workflow"},
+      {"label": "Workplace / Labour Issue", "label_hi": "कार्यस्थल / श्रम समस्या", "next": "labour_workflow"},
+      {"label": "Government Grievance (CPGRAMS)", "label_hi": "सरकारी शिकायत (सीपीग्राम्स)", "next": "cpgrams_workflow"},
       {"label": "Other", "label_hi": "अन्य", "next": "free_text"}
     ]
   },
@@ -411,6 +417,67 @@
     "summary_hi": "उगाही - डरा-धमकाकर संपत्ति लेना",
     "next_steps": ["File FIR at police station", "Do not pay or comply with demands", "Record all communications as evidence", "Seek police protection if needed"],
     "escalation": true
+  },
+
+  "rti_workflow": {
+    "terminal": false,
+    "type": "handoff",
+    "journey": "rti",
+    "handler": "rti_assistant",
+    "prompt": "Describe the records or information you need and where the issue occurred. The RTI assistant will ask for missing jurisdiction details before suggesting a likely public authority.",
+    "prompt_hi": "बताएं कि आपको कौन से रिकॉर्ड या जानकारी चाहिए और समस्या कहां हुई। संभावित लोक प्राधिकरण सुझाने से पहले आरटीआई सहायक आवश्यक क्षेत्राधिकार विवरण पूछेगा।",
+    "summary": "Continue to the RTI drafting workflow.",
+    "next_steps": ["Describe the underlying information need", "Provide the requested jurisdiction details", "Review the proposed record requests and likely authority"]
+  },
+  "scheme_workflow": {
+    "terminal": false,
+    "type": "handoff",
+    "journey": "scheme_eligibility",
+    "handler": "scheme_eligibility",
+    "prompt": "Describe the kind of government support you are seeking. The scheme assistant will ask only the profile details needed to evaluate sourced eligibility rules.",
+    "prompt_hi": "बताएं कि आप किस प्रकार की सरकारी सहायता चाहते हैं। योजना सहायक केवल स्रोत-आधारित पात्रता नियमों के लिए आवश्यक प्रोफ़ाइल विवरण पूछेगा।",
+    "summary": "Continue to the government scheme eligibility workflow.",
+    "next_steps": ["Choose or search for a scheme", "Answer the targeted eligibility questions", "Review matched, unknown, and disqualifying conditions"]
+  },
+  "consumer_workflow": {
+    "terminal": false,
+    "type": "handoff",
+    "journey": "consumer",
+    "handler": "civic_legal_query",
+    "prompt": "Describe the product or service issue, transaction, seller or provider location, and the resolution you requested.",
+    "prompt_hi": "उत्पाद या सेवा की समस्या, लेन-देन, विक्रेता या प्रदाता का स्थान और मांगा गया समाधान बताएं।",
+    "summary": "Continue to jurisdiction-aware consumer guidance.",
+    "next_steps": ["Describe the transaction and problem", "Identify available receipts and communications", "Review the sourced pathway and information still requiring verification"]
+  },
+  "tenant_workflow": {
+    "terminal": false,
+    "type": "handoff",
+    "journey": "tenant",
+    "handler": "civic_legal_query",
+    "prompt": "Describe the tenancy issue and provide the State or Union Territory, city, agreement type, and any notice received. Tenant rules are jurisdiction-specific.",
+    "prompt_hi": "किरायेदारी की समस्या और राज्य या केंद्र शासित प्रदेश, शहर, समझौते का प्रकार तथा मिला कोई नोटिस बताएं। किरायेदारी नियम क्षेत्राधिकार के अनुसार बदलते हैं।",
+    "summary": "Continue to jurisdiction-aware tenant and landlord guidance.",
+    "next_steps": ["Provide the State or Union Territory", "Describe the tenancy and any notice", "Review sourced rules and items marked as requiring verification"]
+  },
+  "labour_workflow": {
+    "terminal": false,
+    "type": "handoff",
+    "journey": "labour",
+    "handler": "civic_legal_query",
+    "prompt": "Describe the workplace issue, work location, employment type, employer or establishment type, and relevant dates.",
+    "prompt_hi": "कार्यस्थल की समस्या, काम का स्थान, रोजगार का प्रकार, नियोक्ता या प्रतिष्ठान का प्रकार और संबंधित तारीखें बताएं।",
+    "summary": "Continue to jurisdiction-aware workplace and labour guidance.",
+    "next_steps": ["Describe the employment relationship and issue", "Identify records such as contracts, wage records, or notices", "Review the sourced pathway and unknown conditions"]
+  },
+  "cpgrams_workflow": {
+    "terminal": false,
+    "type": "handoff",
+    "journey": "cpgrams",
+    "handler": "cpgrams_assistant",
+    "prompt": "Describe the unresolved government-service grievance, the department or office involved if known, prior representations, dates, and the remedy you seek.",
+    "prompt_hi": "अनसुलझी सरकारी सेवा शिकायत, ज्ञात होने पर संबंधित विभाग या कार्यालय, पहले किए गए अभ्यावेदन, तारीखें और मांगा गया समाधान बताएं।",
+    "summary": "Continue to the CPGRAMS grievance workflow.",
+    "next_steps": ["Describe the grievance and prior attempts", "Answer missing-information questions", "Review the draft before any portal action"]
   },
 
   "free_text": {

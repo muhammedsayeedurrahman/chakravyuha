@@ -8,10 +8,12 @@ export function ThemeToggle() {
   // Initialize from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("chakra-theme") as "dark" | "light" | null;
-    if (saved) {
+    if (!saved) return;
+    const frame = requestAnimationFrame(() => {
       setTheme(saved);
       document.documentElement.setAttribute("data-theme", saved);
-    }
+    });
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   const toggle = useCallback(

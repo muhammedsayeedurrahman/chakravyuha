@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 
 const STATS = [
-  { value: 22, suffix: "+", label: "Languages" },
-  { value: 28, suffix: "", label: "Scenarios" },
-  { value: 100, suffix: "%", label: "Hallucination-Free" },
-  { value: 3, suffix: "ms", label: "Response" },
+  { value: 8, suffix: "", label: "UI Languages" },
+  { value: 4, suffix: "", label: "Civic Journeys" },
+  { value: 4, suffix: "", label: "Filing Portals" },
+  { value: 1, suffix: "", label: "Human in Control" },
 ];
 
 function easeOutCubic(t: number): number {

@@ -4,10 +4,16 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
-from backend.models.schemas import QueryRequest, QueryResponse, LegalSection
+from backend.models.schemas import CivicLegalQueryRequest, CivicLegalQueryResponse, QueryRequest, QueryResponse, LegalSection
 from backend.services.legal_service import get_legal_service
 
 router = APIRouter(prefix="/api", tags=["legal"])
+
+
+@router.post("/legal/domains/query", response_model=CivicLegalQueryResponse)
+async def query_civic_legal_domain(request: CivicLegalQueryRequest) -> CivicLegalQueryResponse:
+    """Retrieve sourced consumer, tenant, or labour guidance with jurisdiction flags."""
+    return get_legal_service().query_civic(request)
 
 
 @router.post("/query", response_model=QueryResponse)

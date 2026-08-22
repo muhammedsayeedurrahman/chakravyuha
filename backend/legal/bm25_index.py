@@ -27,6 +27,8 @@ class BM25Index:
             doc_text = " ".join([
                 section.get("title", ""),
                 section.get("description", ""),
+                section.get("summary", ""),
+                " ".join(section.get("guidance", [])),
                 " ".join(section.get("keywords", [])),
             ])
             self._corpus.append(self._tokenize(doc_text))

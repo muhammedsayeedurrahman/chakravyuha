@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 // ── Compound Component Context ────────────────────────────────────────────────
 
@@ -36,24 +36,34 @@ function Step({ stepNumber, label }: StepProps) {
       onClick={() => setStep(stepNumber)}
       aria-label={`Step ${stepNumber}: ${label}`}
       aria-current={isActive ? "step" : undefined}
-      className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400
-        ${isActive
-          ? "bg-orange-100 border border-orange-300 text-gray-800 shadow-sm"
+      className="flex items-center gap-2 rounded-2xl px-3 py-2.5 text-xs font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+      style={{
+        background: isActive
+          ? "var(--color-primary-dim)"
           : isDone
-          ? "bg-green-50 border border-green-200 text-green-700"
-          : "bg-gray-50 border border-gray-200 text-gray-500 hover:bg-gray-100"
-        }`}
+            ? "rgba(34,197,94,0.1)"
+            : "var(--color-surface)",
+        border: `1px solid ${
+          isActive
+            ? "rgba(167,139,250,0.4)"
+            : isDone
+              ? "rgba(34,197,94,0.3)"
+              : "var(--color-border)"
+        }`,
+        color: isActive
+          ? "var(--color-primary)"
+          : isDone
+            ? "#22c55e"
+            : "var(--color-text-muted)",
+      }}
     >
       <motion.span
         layout
-        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0
-          ${isActive
-            ? "bg-orange-500 text-white"
-            : isDone
-            ? "bg-green-500 text-white"
-            : "bg-gray-300 text-gray-600"
-          }`}
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+        style={{
+          background: isActive ? "var(--color-primary)" : isDone ? "#22c55e" : "var(--color-border)",
+          color: isActive || isDone ? "#fff" : "var(--color-text-muted)",
+        }}
       >
         {isDone ? "✓" : stepNumber}
       </motion.span>

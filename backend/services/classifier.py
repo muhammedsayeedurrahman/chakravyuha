@@ -335,6 +335,45 @@ SCENARIO_RULES: list[tuple[str, list[list[str]]]] = [
         ["property", "inherit"],
     ]),
 
+    # ── Civic / Government ───────────────────────────────────────────────
+    ("rti", [
+        ["rti"],
+        ["right", "to", "information"],
+        ["information", "act"],
+        ["file", "information", "request"],
+        ["public", "authority", "records"],
+    ]),
+    ("cpgrams", [
+        ["cpgrams"],
+        ["centralised", "public", "grievance"],
+        ["centralized", "public", "grievance"],
+        ["public", "grievance", "portal"],
+        ["government", "grievance"],
+    ]),
+    ("scheme_eligibility", [
+        ["government", "scheme"],
+        ["welfare", "scheme"],
+        ["scheme", "eligibility"],
+        ["scheme", "eligible"],
+        ["yojana"],
+        ["pm-kisan"],
+        ["pm kisan"],
+        ["pm-sym"],
+        ["pm sym"],
+        ["atal", "pension", "yojana"],
+    ]),
+    ("civic_service", [
+        ["civic", "issue"],
+        ["municipal", "service"],
+        ["municipality", "complaint"],
+        ["panchayat", "service"],
+        ["pothole"],
+        ["streetlight"],
+        ["garbage", "collection"],
+        ["public", "road", "repair"],
+        ["water", "supply", "complaint"],
+    ]),
+
     # ── Consumer / Employment ────────────────────────────────────────────
     ("consumer_complaint", [
         ["consumer", "complaint"],
@@ -381,12 +420,6 @@ SCENARIO_RULES: list[tuple[str, list[list[str]]]] = [
         ["\u0bb5\u0bc7\u0bb2\u0bc8"],                                  # வேலை (job/work)
         ["\u0bb5\u0bc7\u0bb2\u0bc8", "\u0ba8\u0bc0\u0b95\u0bcd\u0b95"],  # வேலை நீக்க (fired from job)
     ]),
-    ("rti", [
-        ["rti"],
-        ["right", "to", "information"],
-        ["information", "act"],
-    ]),
-
     # ── Procedures ───────────────────────────────────────────────────────
     ("file_fir", [
         ["file", "fir"],
