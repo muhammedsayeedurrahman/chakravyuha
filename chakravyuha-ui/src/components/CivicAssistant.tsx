@@ -875,14 +875,7 @@ function SchemeSummaryCard({ scheme }: { scheme: SchemeSummary }) {
 
 function cpgramsDraftText(draft: CPGRAMSDraft | CPGRAMSPrepareResponse["draft"]): string {
   if (!draft) return "";
-  if ("grievance_text" in draft && typeof draft.grievance_text === "string") {
-  return draft.grievance_text;
-}
-
-if ("formatted_text" in draft && typeof draft.formatted_text === "string") {
-  return draft.formatted_text;
-}
-  return draft.formatted_text;
+  return draft.formatted_text ?? "";
 }
 
 function cpgramsDraftSubject(draft: CPGRAMSPrepareResponse["draft"]): string {
