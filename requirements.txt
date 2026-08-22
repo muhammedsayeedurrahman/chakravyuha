@@ -21,3 +21,4 @@ beautifulsoup4>=4.12.0
 # Browser Automation (OpenClaw) — all lazy-imported, graceful degradation
 # playwright>=1.40.0       # Heavy, enable only if browser filing needed
 # google-generativeai>=0.8.0  # Heavy, only used for CAPTCHA solving
+python-multipart
